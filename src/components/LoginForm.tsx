@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useLive } from "@/lib/store";
 import type { AuthUser } from "@/lib/types";
-import { LogoMark, CheckIcon, ChevronDownIcon } from "./icons";
+import { LogoMark } from "./icons";
 
 type Mode = "login" | "signup";
 
@@ -15,69 +16,75 @@ export function LoginForm({
   title?: string;
 }) {
   const { setUser } = useAuth();
+  const { showToast } = useLive();
   const [mode, setMode] = useState<Mode>("login");
-  const [step, setStep] = useState<"email" | "code">("email");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [challengeToken, setChallengeToken] = useState("");
-  const [devOtp, setDevOtp] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const sendCode = async (target: string) => {
-    setLoading(true);
+  const switchMode = (next: Mode) => {
+    setMode(next);
     setError(null);
-    setNotice(null);
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: target, name, mode }),
-      });
-      const data = (await res.json()) as {
-        success?: boolean;
-        error?: string;
-        message?: string;
-        devOtp?: string;
-        challengeToken?: string;
-      };
-      if (!res.ok || !data.success) {
-        setError(data.error || "שליחת הקוד נכשלה, נסו שוב");
-        return;
-      }
-      setChallengeToken(data.challengeToken ?? "");
-      setStep("code");
-      setCode(data.devOtp ?? "");
-      setDevOtp(data.devOtp ?? null);
-      setNotice("שלחנו קוד בן 6 ספרות למייל שלך");
-    } catch {
-      setError("שגיאת רשת. בדקו את החיבור ונסו שוב");
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const verify = async () => {
-    setLoading(true);
+  const submit = async () => {
     setError(null);
+
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    if (mode === "signup" && cleanName.length < 2) {
+      setError("נא להזין שם מלא (לפחות 2 תווים)");
+      return;
+    }
+    if (!cleanEmail) {
+      setError("נא להזין כתובת מייל");
+      return;
+    }
+    if (password.length < 4) {
+      setError("הסיסמה חייבת להכיל לפחות 4 תווים");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, challengeToken }),
-      });
+      const res = await fetch(
+        mode === "signup" ? "/api/auth/signup" : "/api/auth/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            mode === "signup"
+              ? { name: cleanName, email: cleanEmail, password }
+              : { email: cleanEmail, password },
+          ),
+        },
+      );
       const data = (await res.json()) as {
         success?: boolean;
         error?: string;
         user?: AuthUser;
       };
       if (!res.ok || !data.success || !data.user) {
-        setError(data.error || "ההתחברות נכשלה, נסו שוב");
+        setError(
+          data.error ||
+            (mode === "signup"
+              ? "ההרשמה נכשלה, נסו שוב"
+              : "מייל או סיסמה שגויים"),
+        );
         return;
       }
+
       setUser(data.user);
+      try {
+        window.localStorage.setItem("zerem_user", JSON.stringify(data.user));
+      } catch {
+        /* storage may be unavailable — the cookie still persists the session */
+      }
+      if (mode === "signup") {
+        showToast(`ברוך הבא, ${data.user.name || cleanName}!`);
+      }
       onSuccess?.(data.user);
     } catch {
       setError("שגיאת רשת. בדקו את החיבור ונסו שוב");
@@ -86,23 +93,17 @@ export function LoginForm({
     }
   };
 
-  const switchMode = (next: Mode) => {
-    setMode(next);
-    setError(null);
-    setNotice(null);
-  };
-
   return (
     <div data-testid="login-form" className="w-full">
       <div className="flex flex-col items-center text-center">
         <LogoMark className="h-12 w-12" />
         <h2 className="mt-3 text-[1.35rem] font-extrabold tracking-tight text-slate-900">
-          {step === "email" && mode === "signup" ? "הרשמה ל-Zerem" : title}
+          {mode === "signup" ? "הרשמה ל-Zerem" : title}
         </h2>
         <p className="mt-1 text-[0.9rem] text-slate-500">
-          {step === "email"
-            ? "הזן את כתובת המייל שלך לקבלת קוד אימות"
-            : "הזן את קוד האימות בן 6 הספרות שנשלח למייל"}
+          {mode === "signup"
+            ? "פתחו חשבון עם שם, מייל וסיסמה"
+            : "התחברו עם המייל והסיסמה שלכם"}
         </p>
       </div>
 
@@ -115,195 +116,113 @@ export function LoginForm({
         </p>
       ) : null}
 
-      {step === "email" ? (
-        <form
-          className="mt-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void sendCode(email);
-          }}
+      <form
+        className="mt-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+      >
+        <div
+          data-testid="login-mode-tabs"
+          className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1"
         >
-          <div
-            data-testid="login-mode-tabs"
-            className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1"
-          >
-            <button
-              type="button"
-              data-testid="tab-login"
-              aria-pressed={mode === "login"}
-              onClick={() => switchMode("login")}
-              className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
-                mode === "login"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              התחברות
-            </button>
-            <button
-              type="button"
-              data-testid="tab-signup"
-              aria-pressed={mode === "signup"}
-              onClick={() => switchMode("signup")}
-              className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
-                mode === "signup"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              הרשמה
-            </button>
-          </div>
-
-          {mode === "signup" ? (
-            <>
-              <label className="block text-[0.82rem] font-bold text-slate-700">
-                שם מלא
-              </label>
-              <input
-                data-testid="signup-name"
-                type="text"
-                autoComplete="name"
-                required
-                minLength={2}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="ישראל ישראלי"
-                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-              />
-            </>
-          ) : null}
-
-          <label
-            className={`block text-[0.82rem] font-bold text-slate-700 ${
-              mode === "signup" ? "mt-4" : ""
+          <button
+            type="button"
+            data-testid="tab-login"
+            aria-pressed={mode === "login"}
+            onClick={() => switchMode("login")}
+            className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
+              mode === "login"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            כתובת מייל
-          </label>
-          <input
-            data-testid="login-email"
-            type="email"
-            dir="ltr"
-            inputMode="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-          />
-          <button
-            type="submit"
-            data-testid="login-send"
-            disabled={loading || (mode === "signup" && name.trim().length < 2)}
-            className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-500 text-[1.05rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
-          >
-            {loading
-              ? "שולח קוד…"
-              : mode === "signup"
-                ? "הרשמה ושליחת קוד"
-                : "שלח קוד אימות"}
+            התחברות
           </button>
-        </form>
-      ) : (
-        <form
-          className="mt-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void verify();
-          }}
+          <button
+            type="button"
+            data-testid="tab-signup"
+            aria-pressed={mode === "signup"}
+            onClick={() => switchMode("signup")}
+            className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
+              mode === "signup"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            הרשמה
+          </button>
+        </div>
+
+        {mode === "signup" ? (
+          <>
+            <label className="block text-[0.82rem] font-bold text-slate-700">
+              שם מלא
+            </label>
+            <input
+              data-testid="signup-name"
+              type="text"
+              autoComplete="name"
+              required
+              minLength={2}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="ישראל ישראלי"
+              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </>
+        ) : null}
+
+        <label
+          className={`block text-[0.82rem] font-bold text-slate-700 ${
+            mode === "signup" ? "mt-4" : ""
+          }`}
         >
-          {notice ? (
-            <p className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-center text-[0.82rem] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-500/15">
-              <CheckIcon className="h-4 w-4" />
-              {notice}
-            </p>
-          ) : null}
+          כתובת מייל
+        </label>
+        <input
+          data-testid="login-email"
+          type="email"
+          dir="ltr"
+          inputMode="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+        />
 
-          <p className="mt-4 text-center text-[0.85rem] text-slate-500">
-            הקוד נשלח אל{" "}
-            <span dir="ltr" className="font-bold text-slate-800">
-              {email}
-            </span>
-          </p>
+        <label className="mt-4 block text-[0.82rem] font-bold text-slate-700">
+          סיסמה
+        </label>
+        <input
+          data-testid="login-password"
+          type="password"
+          dir="ltr"
+          autoComplete={mode === "signup" ? "new-password" : "current-password"}
+          required
+          minLength={4}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+        />
 
-          {devOtp ? (
-            <button
-              type="button"
-              data-testid="dev-otp"
-              onClick={() => setCode(devOtp)}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2.5 text-center text-[0.8rem] font-semibold leading-snug text-amber-800 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100 active:scale-[0.99]"
-            >
-              קוד אימות לבדיקה:{" "}
-              <span className="font-mono font-extrabold tracking-wider">
-                {devOtp}
-              </span>{" "}
-              (חבר RESEND_API_KEY לשליחה ישירה למייל)
-            </button>
-          ) : null}
-
-          <label className="mt-4 block text-[0.82rem] font-bold text-slate-700">
-            קוד אימות
-          </label>
-          <input
-            data-testid="login-code"
-            type="text"
-            dir="ltr"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            required
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            onPaste={(e) => {
-              e.preventDefault();
-              const pasted = e.clipboardData
-                .getData("text")
-                .replace(/\D/g, "")
-                .slice(0, 6);
-              setCode(pasted);
-            }}
-            placeholder="000000"
-            className="mt-2 min-h-14 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-[1.75rem] tracking-[0.5em] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-          />
-
-          <button
-            type="submit"
-            data-testid="login-verify"
-            disabled={loading || code.length < 6}
-            className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-[1.05rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-50"
-          >
-            {loading ? "מאמת…" : mode === "signup" ? "הרשמה והתחברות" : "התחבר"}
-          </button>
-
-          <div className="mt-3 flex items-center justify-center gap-4 text-[0.82rem] font-semibold">
-            <button
-              type="button"
-              onClick={() => void sendCode(email)}
-              disabled={loading}
-              className="text-emerald-700 underline-offset-4 hover:underline disabled:opacity-60"
-            >
-              שלח קוד חדש
-            </button>
-            <span className="text-slate-300" aria-hidden="true">
-              ·
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setStep("email");
-                setError(null);
-                setDevOtp(null);
-              }}
-              className="inline-flex items-center gap-1 text-slate-500 underline-offset-4 hover:underline"
-            >
-              <ChevronDownIcon className="h-3.5 w-3.5 rotate-90" />
-              כתובת אחרת
-            </button>
-          </div>
-        </form>
-      )}
+        <button
+          type="submit"
+          data-testid="login-submit"
+          disabled={loading}
+          className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-500 text-[1.05rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
+        >
+          {loading
+            ? "רק רגע…"
+            : mode === "signup"
+              ? "הרשמה וכניסה"
+              : "התחברות"}
+        </button>
+      </form>
     </div>
   );
 }

@@ -41,6 +41,7 @@ interface LiveContextValue {
   reportCountFor: (branchId: string) => number;
   totalSubmissions: number;
   toast: string | null;
+  showToast: (message: string) => void;
 }
 
 const LiveContext = createContext<LiveContextValue | null>(null);
@@ -208,6 +209,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       reportCountFor,
       totalSubmissions,
       toast,
+      showToast: setToast,
     };
   }, [
     ready,

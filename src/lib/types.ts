@@ -89,8 +89,10 @@ export interface UserLocation {
 
 export type UserRole = "admin" | "user";
 
-/** A registered Zerem account (persisted in data/users.json). */
+/** A registered Zerem account (the public shape — no password material). */
 export interface AuthUser {
+  /** Stable account id (present on accounts created with a password). */
+  id?: string;
   email: string;
   /** Full name supplied at signup (optional for existing accounts). */
   name?: string;

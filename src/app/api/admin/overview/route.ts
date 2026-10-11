@@ -4,8 +4,8 @@ import { currentUser } from "@/lib/server/current-user";
 import {
   ADMIN_EMAILS,
   getActivity,
+  getPublicUsers,
   getReports,
-  getUsers,
 } from "@/lib/server/auth-store";
 import type { AdminOverview, AuthUser } from "@/lib/types";
 
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   }
 
   const [storedUsers, activity, reports] = await Promise.all([
-    getUsers(),
+    getPublicUsers(),
     getActivity(200),
     getReports(),
   ]);

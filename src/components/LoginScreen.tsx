@@ -42,7 +42,7 @@ export function LoginScreen() {
         </div>
 
         <p className="mt-5 text-center text-[0.78rem] text-slate-400">
-          זרם · התחברות מאובטחת ללא סיסמה
+          זרם · התחברות מאובטחת עם מייל וסיסמה
         </p>
       </div>
     </div>

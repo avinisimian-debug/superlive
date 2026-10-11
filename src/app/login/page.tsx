@@ -4,7 +4,7 @@ import { LoginScreen } from "@/components/LoginScreen";
 
 export const metadata: Metadata = {
   title: "התחברות | Zerem (זרם)",
-  description: "התחברות מאובטחת ל-Zerem באמצעות קוד אימות חד-פעמי למייל.",
+  description: "התחברות מאובטחת ל-Zerem באמצעות כתובת מייל וסיסמה.",
 };
 
 export default function LoginPage() {

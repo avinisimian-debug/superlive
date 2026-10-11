@@ -1,4 +1,4 @@
-import { randomBytes, randomInt } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ActivityEvent, ActivityType, AuthUser, UserRole } from "@/lib/types";
@@ -8,10 +8,8 @@ export const ADMIN_EMAILS = ["aviya.nish@gmail.com", "avi.nisimian@gmail.com"];
 /** Backwards-compatible primary admin address. */
 export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
-/** OTP lifetime (task requirement: 10 minutes). */
-export const OTP_TTL_MS = 10 * 60 * 1000;
-/** Session lifetime. */
-export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** Session lifetime: one full year (task requirement). */
+export const SESSION_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 /** Session cookie name. */
 export const SESSION_COOKIE = "zerem_session";
 
@@ -22,23 +20,19 @@ export function roleForEmail(email: string): UserRole {
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
-const OTPS_FILE = path.join(DATA_DIR, "otps.json");
-const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 const ACTIVITY_FILE = path.join(DATA_DIR, "activity.json");
 const REPORTS_FILE = path.join(DATA_DIR, "reports.json");
 
-export interface OtpRecord {
+/** The full persisted account record (data/users.json). */
+export interface StoredUser {
+  id: string;
+  name?: string;
   email: string;
-  code: string;
-  createdAt: number;
-  expiresAt: number;
-}
-
-export interface SessionRecord {
-  token: string;
-  email: string;
-  createdAt: number;
-  expiresAt: number;
+  passwordHash: string;
+  salt: string;
+  createdAt: string;
+  lastLoginAt: string;
+  role: UserRole;
 }
 
 export interface ReportEvent {
@@ -58,12 +52,17 @@ export function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export function generateOtp(): string {
-  return String(randomInt(0, 1_000_000)).padStart(6, "0");
+export function generateId(): string {
+  return randomBytes(12).toString("hex");
 }
 
-export function generateToken(): string {
-  return randomBytes(24).toString("hex");
+export function generateSalt(): string {
+  return randomBytes(16).toString("hex");
+}
+
+/** SHA256(salt + password) — salted so identical passwords differ per account. */
+export function hashPassword(password: string, salt: string): string {
+  return createHash("sha256").update(`${salt}${password}`).digest("hex");
 }
 
 /**
@@ -93,103 +92,101 @@ async function writeJson(file: string, value: unknown): Promise<void> {
   }
 }
 
-export async function getUsers(): Promise<AuthUser[]> {
-  return readJson<AuthUser[]>(USERS_FILE, []);
+/** All accounts, including password material (server-side only). */
+export async function getStoredUsers(): Promise<StoredUser[]> {
+  return readJson<StoredUser[]>(USERS_FILE, []);
 }
 
-export async function getUser(email: string): Promise<AuthUser | null> {
-  const users = await getUsers();
+export async function getStoredUser(email: string): Promise<StoredUser | null> {
+  const users = await getStoredUsers();
   return users.find((u) => u.email === email) ?? null;
 }
 
-export async function upsertUser(
-  email: string,
-  role: UserRole,
-  now: string,
-  name?: string,
-): Promise<AuthUser> {
-  const normalized = normalizeEmail(email);
-  const adminRole = roleForEmail(normalized);
-  const users = await getUsers();
-  const existing = users.find((u) => u.email === normalized);
+/** Public account list — password hash and salt stripped. */
+export function toAuthUser(user: StoredUser): AuthUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    createdAt: user.createdAt,
+    lastLoginAt: user.lastLoginAt,
+    role: user.role,
+  };
+}
+
+/** The public account list returned to the admin dashboard. */
+export async function getPublicUsers(): Promise<AuthUser[]> {
+  const users = await getStoredUsers();
+  return users.map(toAuthUser);
+}
+
+export function verifyPassword(user: StoredUser, password: string): boolean {
+  if (!user.passwordHash || !user.salt) return false;
+  const candidate = hashPassword(password, user.salt);
+  // Length check guards timingSafeEqual-ish comparison of hex strings.
+  if (candidate.length !== user.passwordHash.length) return false;
+  let diff = 0;
+  for (let i = 0; i < candidate.length; i += 1) {
+    diff |= candidate.charCodeAt(i) ^ user.passwordHash.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
+/**
+ * Creates a fresh account. Returns the stored record, or null when the email
+ * already has a password set on file.
+ */
+export async function createUser(
+  input: CreateUserInput,
+): Promise<StoredUser | null> {
+  const email = normalizeEmail(input.email);
+  const users = await getStoredUsers();
+  const now = new Date().toISOString();
+  const existing = users.find((u) => u.email === email);
+
   if (existing) {
+    // Legacy accounts (e.g. created during the OTP era) have no password yet:
+    // let this first password set claim the account instead of blocking it.
+    if (existing.passwordHash && existing.salt) return null;
+    if (!existing.id) existing.id = generateId();
+    existing.salt = generateSalt();
+    existing.passwordHash = hashPassword(input.password, existing.salt);
+    existing.name = input.name.trim() || existing.name;
+    if (roleForEmail(email) === "admin") existing.role = "admin";
     existing.lastLoginAt = now;
-    if (name) existing.name = name;
-    // The admin role is guaranteed for the owner addresses.
-    if (adminRole === "admin") existing.role = "admin";
     await writeJson(USERS_FILE, users);
     return existing;
   }
-  const user: AuthUser = {
-    email: normalized,
-    name: name || undefined,
+
+  const user: StoredUser = {
+    id: generateId(),
+    name: input.name.trim(),
+    email,
+    salt: generateSalt(),
+    passwordHash: "",
     createdAt: now,
     lastLoginAt: now,
-    role: adminRole === "admin" ? "admin" : role,
+    role: roleForEmail(email),
   };
+  user.passwordHash = hashPassword(input.password, user.salt);
   users.push(user);
   await writeJson(USERS_FILE, users);
   return user;
 }
 
-export async function saveOtp(record: OtpRecord): Promise<void> {
-  const otps = await readJson<Record<string, OtpRecord>>(OTPS_FILE, {});
-  otps[record.email] = record;
-  await writeJson(OTPS_FILE, otps);
-}
-
-export async function getOtp(email: string): Promise<OtpRecord | null> {
-  const otps = await readJson<Record<string, OtpRecord>>(OTPS_FILE, {});
-  return otps[email] ?? null;
-}
-
-export async function deleteOtp(email: string): Promise<void> {
-  const otps = await readJson<Record<string, OtpRecord>>(OTPS_FILE, {});
-  delete otps[email];
-  await writeJson(OTPS_FILE, otps);
-}
-
-export async function createSession(email: string): Promise<SessionRecord> {
-  const now = Date.now();
-  const session: SessionRecord = {
-    token: generateToken(),
-    email,
-    createdAt: now,
-    expiresAt: now + SESSION_TTL_MS,
-  };
-  const sessions = await readJson<Record<string, SessionRecord>>(
-    SESSIONS_FILE,
-    {},
-  );
-  sessions[session.token] = session;
-  await writeJson(SESSIONS_FILE, sessions);
-  return session;
-}
-
-export async function getSession(
-  token: string | undefined,
-): Promise<SessionRecord | null> {
-  if (!token) return null;
-  const sessions = await readJson<Record<string, SessionRecord>>(
-    SESSIONS_FILE,
-    {},
-  );
-  const session = sessions[token];
-  if (!session) return null;
-  if (session.expiresAt < Date.now()) return null;
-  return session;
-}
-
-export async function deleteSession(token: string | undefined): Promise<void> {
-  if (!token) return;
-  const sessions = await readJson<Record<string, SessionRecord>>(
-    SESSIONS_FILE,
-    {},
-  );
-  if (sessions[token]) {
-    delete sessions[token];
-    await writeJson(SESSIONS_FILE, sessions);
-  }
+/** Refreshes the last-login timestamp for an account. */
+export async function touchLastLogin(email: string): Promise<void> {
+  const users = await getStoredUsers();
+  const user = users.find((u) => u.email === normalizeEmail(email));
+  if (!user) return;
+  user.lastLoginAt = new Date().toISOString();
+  await writeJson(USERS_FILE, users);
 }
 
 export async function getActivity(limit = 50): Promise<ActivityEvent[]> {

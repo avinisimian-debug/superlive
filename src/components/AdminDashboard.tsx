@@ -214,6 +214,7 @@ export function AdminDashboard() {
                 <table data-testid="users-table" className="w-full text-right">
                   <thead>
                     <tr className="border-b border-slate-100 text-[0.72rem] font-bold uppercase tracking-wide text-slate-400">
+                      <th className="px-5 py-3 font-bold">שם</th>
                       <th className="px-5 py-3 font-bold">מייל</th>
                       <th className="px-5 py-3 font-bold">הצטרפות</th>
                       <th className="px-5 py-3 font-bold">כניסה אחרונה</th>
@@ -226,6 +227,9 @@ export function AdminDashboard() {
                         key={u.email}
                         className="border-b border-slate-50 text-[0.86rem] last:border-0 hover:bg-slate-50/60"
                       >
+                        <td className="px-5 py-3.5 font-semibold text-slate-800">
+                          {u.name || "—"}
+                        </td>
                         <td
                           dir="ltr"
                           className="px-5 py-3.5 text-left font-semibold text-slate-800"
