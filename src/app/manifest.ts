@@ -17,15 +17,15 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["shopping", "navigation", "utilities"],
     icons: [
       {
-        src: "/icons/icon.svg",
+        src: "/icons/icon-512.png",
         sizes: "any",
-        type: "image/svg+xml",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/maskable.svg",
+        src: "/icons/icon-192.png",
         sizes: "any",
-        type: "image/svg+xml",
+        type: "image/png",
         purpose: "maskable",
       },
     ],

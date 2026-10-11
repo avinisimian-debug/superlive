@@ -13,6 +13,15 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Zerem",
+  },: Metadata = {
   title: "Zerem | זרם — עומסים וחניה בסופרמרקטים בזמן אמת",
   description:
     "Zerem (זרם) — המעקב הקהילתי בזמן אמת אחרי עומסים בקופות ומצב חניה בסופרמרקטים ובמכולות בישראל. דיווח של קהילה, בדיקת המצב לפני שיוצאים, וניווט ישר ב-Waze.",
