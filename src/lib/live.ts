@@ -66,6 +66,22 @@ const SIZE_FACTOR: Record<Branch["size"], number> = {
 };
 
 /**
+ * Small neighbourhood / village groceries that are effectively never crowded:
+ * their baseline is pinned to quiet so congestion stays "free" and parking
+ * "plenty" (a real community report can still override the default).
+ */
+const ALWAYS_QUIET_CHAINS: ReadonlySet<Chain> = new Set(["מכולת שכונתית"]);
+
+/** Specific branches pinned to the quiet baseline as well. */
+const ALWAYS_QUIET_BRANCH_IDS: ReadonlySet<string> = new Set(["b-3449"]);
+
+const QUIET_LOAD = 0.18;
+
+function isAlwaysQuiet(branch: Branch): boolean {
+  return ALWAYS_QUIET_CHAINS.has(branch.chain) || ALWAYS_QUIET_BRANCH_IDS.has(branch.id);
+}
+
+/**
  * Per-chain baseline demand offset (-0.1 … +0.14). Discount/hyper chains draw
  * bigger crowds at peak, express convenience formats stay lighter.
  */
@@ -117,6 +133,7 @@ const CHAIN_LOAD: Record<Chain, number> = {
  * per-chain demand profile and store size.
  */
 export function loadScore(branch: Branch, date: Date): number {
+  if (isAlwaysQuiet(branch)) return QUIET_LOAD;
   const hour = date.getHours() + date.getMinutes() / 60;
   const day = date.getDay(); // 0 = Sunday … 5 = Friday, 6 = Saturday
   const popularity = (hash(branch.id) % 1000) / 1000;

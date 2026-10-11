@@ -110,7 +110,10 @@ export function BranchDetailSheet({
     [branch, now],
   );
   const currentHour = date.getHours();
-  const wazeHref = `https://waze.com/ul?ll=${branch.lat},${branch.lng}&navigate=yes`;
+  const wazeQuery = encodeURIComponent(
+    `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
+  );
+  const wazeHref = `https://waze.com/ul?q=${wazeQuery}&ll=${branch.lat},${branch.lng}&navigate=yes`;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

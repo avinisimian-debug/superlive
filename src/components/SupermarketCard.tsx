@@ -34,7 +34,10 @@ export function SupermarketCard({
   onOpen: (branch: Branch) => void;
 }) {
   const open = isOpenAt(branch.scheduleIdx, new Date(now));
-  const wazeHref = `https://waze.com/ul?ll=${branch.lat},${branch.lng}&navigate=yes`;
+  const wazeQuery = encodeURIComponent(
+    `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
+  );
+  const wazeHref = `https://waze.com/ul?q=${wazeQuery}&ll=${branch.lat},${branch.lng}&navigate=yes`;
 
   return (
     <article className="animate-card relative rounded-2xl border border-slate-100 bg-white p-4 shadow-card transition-shadow duration-300 hover:shadow-lift">

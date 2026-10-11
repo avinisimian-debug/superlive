@@ -1,45 +1,57 @@
 /**
  * Opening-hours profiles. Each profile holds a Hebrew label plus, for every
- * weekday (index 0 = Sunday … 6 = Saturday), an [open, close] pair in minutes
- * since midnight (or null when closed). Indices must stay in sync with the
- * generated data (build_data.py).
+ * weekday (index 0 = Sunday … 6 = Saturday), a list of [open, close] intervals
+ * in minutes since midnight (or null when closed). A day may hold more than one
+ * interval to express a mid-day break (e.g. 06:30–14:00 and 16:30–19:00).
+ * Indices must stay in sync with the generated data (build_data.py).
  */
+export type Slot = [number, number];
+
 export interface ScheduleProfile {
   label: string;
-  days: ([number, number] | null)[];
+  days: (Slot[] | null)[];
 }
 
-const w = (o: number, c: number): [number, number] => [o, c];
-const shabbat = (o: number, c: number): [number, number] => [o, c];
+/** A weekday with a single opening interval. */
+const d = (o: number, c: number): Slot[] => [[o, c]];
+/** A weekday with two opening intervals (split hours around a mid-day break). */
+const s = (o1: number, c1: number, o2: number, c2: number): Slot[] => [
+  [o1, c1],
+  [o2, c2],
+];
 
 export const SCHEDULES: ScheduleProfile[] = [
   {
     label: "א׳–ה׳ 8:00–21:00 · ו׳ 8:00–14:00 · ש׳ סגור",
-    days: [w(480, 1260), w(480, 1260), w(480, 1260), w(480, 1260), w(480, 1260), w(480, 840), null],
+    days: [d(480, 1260), d(480, 1260), d(480, 1260), d(480, 1260), d(480, 1260), d(480, 840), null],
   },
   {
     label: "א׳–ה׳ 8:00–22:00 · ו׳ 8:00–15:00 · ש׳ סגור",
-    days: [w(480, 1320), w(480, 1320), w(480, 1320), w(480, 1320), w(480, 1320), w(480, 900), null],
+    days: [d(480, 1320), d(480, 1320), d(480, 1320), d(480, 1320), d(480, 1320), d(480, 900), null],
   },
   {
     label: "א׳–ה׳ 7:00–23:00 · ו׳ 7:00–15:30 · ש׳ 8:00–21:00",
-    days: [w(420, 1380), w(420, 1380), w(420, 1380), w(420, 1380), w(420, 1380), w(420, 930), w(480, 1260)],
+    days: [d(420, 1380), d(420, 1380), d(420, 1380), d(420, 1380), d(420, 1380), d(420, 930), d(480, 1260)],
   },
   {
     label: "א׳–ה׳ 8:00–23:00 · ו׳ 7:00–16:00 · ש׳ סגור",
-    days: [w(480, 1380), w(480, 1380), w(480, 1380), w(480, 1380), w(480, 1380), w(420, 960), null],
+    days: [d(480, 1380), d(480, 1380), d(480, 1380), d(480, 1380), d(480, 1380), d(420, 960), null],
   },
   {
     label: "פתוח 24/7",
-    days: [w(0, 1440), w(0, 1440), w(0, 1440), w(0, 1440), w(0, 1440), w(0, 1440), w(0, 1440)],
+    days: [d(0, 1440), d(0, 1440), d(0, 1440), d(0, 1440), d(0, 1440), d(0, 1440), d(0, 1440)],
   },
   {
     label: "א׳–ה׳ 8:00–22:00 · ו׳ 8:00–15:00 · ש׳ 20:30–23:30",
-    days: [w(480, 1320), w(480, 1320), w(480, 1320), w(480, 1320), w(480, 1320), w(480, 900), shabbat(1230, 1410)],
+    days: [d(480, 1320), d(480, 1320), d(480, 1320), d(480, 1320), d(480, 1320), d(480, 900), d(1230, 1410)],
   },
   {
     label: "א׳–ה׳ 7:00–22:00 · ו׳ 7:00–14:00 · ש׳ 9:00–20:00",
-    days: [w(420, 1320), w(420, 1320), w(420, 1320), w(420, 1320), w(420, 1320), w(420, 840), w(540, 1200)],
+    days: [d(420, 1320), d(420, 1320), d(420, 1320), d(420, 1320), d(420, 1320), d(420, 840), d(540, 1200)],
+  },
+  {
+    label: "א׳–ה׳ 06:30–14:00, 16:30–19:00 · ו׳ 06:30–14:00 · מוצ״ש סגור",
+    days: [s(390, 840, 990, 1140), s(390, 840, 990, 1140), s(390, 840, 990, 1140), s(390, 840, 990, 1140), s(390, 840, 990, 1140), d(390, 840), null],
   },
 ];
 
@@ -47,10 +59,10 @@ export const SCHEDULES: ScheduleProfile[] = [
 export function isOpenAt(scheduleIdx: number, date: Date): boolean {
   const profile = SCHEDULES[scheduleIdx];
   if (!profile) return true;
-  const slot = profile.days[date.getDay()];
-  if (!slot) return false;
+  const slots = profile.days[date.getDay()];
+  if (!slots || slots.length === 0) return false;
   const minutes = date.getHours() * 60 + date.getMinutes();
-  return minutes >= slot[0] && minutes < slot[1];
+  return slots.some(([o, c]) => minutes >= o && minutes < c);
 }
 
 const DAY_NAMES = [
@@ -70,9 +82,9 @@ export function minutesToLabel(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-function slotLabel(slot: [number, number] | null | undefined): string {
-  if (!slot) return "סגור";
-  return `${minutesToLabel(slot[0])}–${minutesToLabel(slot[1])}`;
+function slotsLabel(slots: Slot[] | null | undefined): string {
+  if (!slots || slots.length === 0) return "סגור";
+  return slots.map(([o, c]) => `${minutesToLabel(o)}–${minutesToLabel(c)}`).join(" · ");
 }
 
 export interface WeeklyHoursRow {
@@ -90,10 +102,10 @@ export function weeklyHours(scheduleIdx: number): WeeklyHoursRow[] {
   const profile = SCHEDULES[scheduleIdx];
   const days = profile?.days ?? [];
   return [
-    { key: "sun-wed", label: "א׳–ד׳", value: slotLabel(days[0]) },
-    { key: "thu", label: "ה׳", value: slotLabel(days[4]) },
-    { key: "fri", label: "ו׳ וערב חג", value: slotLabel(days[5]) },
-    { key: "sat", label: "מוצ״ש", value: slotLabel(days[6]) },
+    { key: "sun-wed", label: "א׳–ד׳", value: slotsLabel(days[0]) },
+    { key: "thu", label: "ה׳", value: slotsLabel(days[4]) },
+    { key: "fri", label: "ו׳ וערב חג", value: slotsLabel(days[5]) },
+    { key: "sat", label: "מוצ״ש", value: slotsLabel(days[6]) },
   ];
 }
 
@@ -108,32 +120,32 @@ export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
   if (!profile) return { open: true, text: "פתוח 24/7" };
   const minutes = date.getHours() * 60 + date.getMinutes();
   const today = profile.days[date.getDay()];
-  if (today && minutes >= today[0] && minutes < today[1]) {
+
+  const current = today?.find(([o, c]) => minutes >= o && minutes < c);
+  if (current) {
     return {
       open: true,
-      text: `פתוח עכשיו · נסגר ב-${minutesToLabel(today[1])}`,
+      text: `פתוח עכשיו · נסגר ב-${minutesToLabel(current[1])}`,
     };
   }
-  const tomorrow = profile.days[(date.getDay() + 1) % 7];
-  if (today && minutes < today[0]) {
+
+  const laterToday = today?.find(([o]) => o > minutes);
+  if (laterToday) {
     return {
       open: false,
-      text: `סגור · נפתח היום ב-${minutesToLabel(today[0])}`,
+      text: `סגור · נפתח היום ב-${minutesToLabel(laterToday[0])}`,
     };
   }
-  if (tomorrow) {
-    return {
-      open: false,
-      text: `סגור · נפתח מחר ב-${minutesToLabel(tomorrow[0])}`,
-    };
-  }
-  for (let i = 2; i < 7; i++) {
+
+  for (let i = 1; i <= 7; i++) {
     const day = (date.getDay() + i) % 7;
-    const slot = profile.days[day];
-    if (slot) {
+    const slots = profile.days[day];
+    if (slots && slots.length > 0) {
+      const first = minutesToLabel(slots[0][0]);
+      if (i === 1) return { open: false, text: `סגור · נפתח מחר ב-${first}` };
       return {
         open: false,
-        text: `סגור · נפתח ביום ${DAY_NAMES[day]} ב-${minutesToLabel(slot[0])}`,
+        text: `סגור · נפתח ביום ${DAY_NAMES[day]} ב-${first}`,
       };
     }
   }
@@ -144,17 +156,19 @@ export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
 export function scheduleHint(scheduleIdx: number, date: Date): string | null {
   const profile = SCHEDULES[scheduleIdx];
   if (!profile) return null;
-  const slot = profile.days[date.getDay()];
-  if (!slot) return null;
+  const slots = profile.days[date.getDay()];
+  if (!slots || slots.length === 0) return null;
   const minutes = date.getHours() * 60 + date.getMinutes();
-  if (minutes >= slot[0] && minutes < slot[1]) {
-    const left = slot[1] - minutes;
+
+  const current = slots.find(([o, c]) => minutes >= o && minutes < c);
+  if (current) {
+    const left = current[1] - minutes;
     if (left <= 60) return `נסגר בעוד ${left} דק׳`;
     return null;
   }
-  if (slot[0] - minutes > 0 && slot[0] - minutes <= 90) {
-    const mins = slot[0] - minutes;
-    return `נפתח בעוד ${mins} דק׳`;
+  const next = slots.find(([o]) => o > minutes);
+  if (next && next[0] - minutes <= 90) {
+    return `נפתח בעוד ${next[0] - minutes} דק׳`;
   }
   return null;
 }
