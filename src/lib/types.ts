@@ -90,6 +90,8 @@ export type UserRole = "admin" | "user";
 /** A registered Zerem account (persisted in data/users.json). */
 export interface AuthUser {
   email: string;
+  /** Full name supplied at signup (optional for existing accounts). */
+  name?: string;
   /** ISO timestamp of first registration. */
   createdAt: string;
   /** ISO timestamp of the most recent successful login. */

@@ -3,8 +3,10 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ActivityEvent, ActivityType, AuthUser, UserRole } from "@/lib/types";
 
-/** The single hard-coded administrator of Zerem. */
-export const ADMIN_EMAIL = "avi.nisimian@gmail.com";
+/** The hard-coded administrators of Zerem. */
+export const ADMIN_EMAILS = ["aviya.nish@gmail.com", "avi.nisimian@gmail.com"];
+/** Backwards-compatible primary admin address. */
+export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
 /** OTP lifetime (task requirement: 10 minutes). */
 export const OTP_TTL_MS = 10 * 60 * 1000;
@@ -12,6 +14,11 @@ export const OTP_TTL_MS = 10 * 60 * 1000;
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** Session cookie name. */
 export const SESSION_COOKIE = "zerem_session";
+
+/** Resolves the role for an address: the two owner addresses are admins. */
+export function roleForEmail(email: string): UserRole {
+  return ADMIN_EMAILS.includes(normalizeEmail(email)) ? "admin" : "user";
+}
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
@@ -99,21 +106,26 @@ export async function upsertUser(
   email: string,
   role: UserRole,
   now: string,
+  name?: string,
 ): Promise<AuthUser> {
+  const normalized = normalizeEmail(email);
+  const adminRole = roleForEmail(normalized);
   const users = await getUsers();
-  const existing = users.find((u) => u.email === email);
+  const existing = users.find((u) => u.email === normalized);
   if (existing) {
     existing.lastLoginAt = now;
-    // The admin role is guaranteed for the owner address.
-    if (email === ADMIN_EMAIL) existing.role = "admin";
+    if (name) existing.name = name;
+    // The admin role is guaranteed for the owner addresses.
+    if (adminRole === "admin") existing.role = "admin";
     await writeJson(USERS_FILE, users);
     return existing;
   }
   const user: AuthUser = {
-    email,
+    email: normalized,
+    name: name || undefined,
     createdAt: now,
     lastLoginAt: now,
-    role: email === ADMIN_EMAIL ? "admin" : role,
+    role: adminRole === "admin" ? "admin" : role,
   };
   users.push(user);
   await writeJson(USERS_FILE, users);

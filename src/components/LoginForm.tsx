@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth";
 import type { AuthUser } from "@/lib/types";
 import { LogoMark, CheckIcon, ChevronDownIcon } from "./icons";
 
+type Mode = "login" | "signup";
+
 export function LoginForm({
   onSuccess,
   title = "התחברות ל-Zerem",
@@ -13,9 +15,12 @@ export function LoginForm({
   title?: string;
 }) {
   const { setUser } = useAuth();
+  const [mode, setMode] = useState<Mode>("login");
   const [step, setStep] = useState<"email" | "code">("email");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [challengeToken, setChallengeToken] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,18 +34,20 @@ export function LoginForm({
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: target }),
+        body: JSON.stringify({ email: target, name, mode }),
       });
       const data = (await res.json()) as {
         success?: boolean;
         error?: string;
         message?: string;
         devOtp?: string;
+        challengeToken?: string;
       };
       if (!res.ok || !data.success) {
         setError(data.error || "שליחת הקוד נכשלה, נסו שוב");
         return;
       }
+      setChallengeToken(data.challengeToken ?? "");
       setStep("code");
       setCode(data.devOtp ?? "");
       setDevOtp(data.devOtp ?? null);
@@ -59,7 +66,7 @@ export function LoginForm({
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code, challengeToken }),
       });
       const data = (await res.json()) as {
         success?: boolean;
@@ -79,12 +86,18 @@ export function LoginForm({
     }
   };
 
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setError(null);
+    setNotice(null);
+  };
+
   return (
     <div data-testid="login-form" className="w-full">
       <div className="flex flex-col items-center text-center">
         <LogoMark className="h-12 w-12" />
         <h2 className="mt-3 text-[1.35rem] font-extrabold tracking-tight text-slate-900">
-          {title}
+          {step === "email" && mode === "signup" ? "הרשמה ל-Zerem" : title}
         </h2>
         <p className="mt-1 text-[0.9rem] text-slate-500">
           {step === "email"
@@ -110,7 +123,62 @@ export function LoginForm({
             void sendCode(email);
           }}
         >
-          <label className="block text-[0.82rem] font-bold text-slate-700">
+          <div
+            data-testid="login-mode-tabs"
+            className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1"
+          >
+            <button
+              type="button"
+              data-testid="tab-login"
+              aria-pressed={mode === "login"}
+              onClick={() => switchMode("login")}
+              className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
+                mode === "login"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              התחברות
+            </button>
+            <button
+              type="button"
+              data-testid="tab-signup"
+              aria-pressed={mode === "signup"}
+              onClick={() => switchMode("signup")}
+              className={`min-h-10 rounded-lg text-[0.9rem] font-bold transition ${
+                mode === "signup"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              הרשמה
+            </button>
+          </div>
+
+          {mode === "signup" ? (
+            <>
+              <label className="block text-[0.82rem] font-bold text-slate-700">
+                שם מלא
+              </label>
+              <input
+                data-testid="signup-name"
+                type="text"
+                autoComplete="name"
+                required
+                minLength={2}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="ישראל ישראלי"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-[0.95rem] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              />
+            </>
+          ) : null}
+
+          <label
+            className={`block text-[0.82rem] font-bold text-slate-700 ${
+              mode === "signup" ? "mt-4" : ""
+            }`}
+          >
             כתובת מייל
           </label>
           <input
@@ -128,10 +196,14 @@ export function LoginForm({
           <button
             type="submit"
             data-testid="login-send"
-            disabled={loading}
+            disabled={loading || (mode === "signup" && name.trim().length < 2)}
             className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-500 text-[1.05rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
           >
-            {loading ? "שולח קוד…" : "שלח קוד אימות"}
+            {loading
+              ? "שולח קוד…"
+              : mode === "signup"
+                ? "הרשמה ושליחת קוד"
+                : "שלח קוד אימות"}
           </button>
         </form>
       ) : (
@@ -184,6 +256,14 @@ export function LoginForm({
             required
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            onPaste={(e) => {
+              e.preventDefault();
+              const pasted = e.clipboardData
+                .getData("text")
+                .replace(/\D/g, "")
+                .slice(0, 6);
+              setCode(pasted);
+            }}
             placeholder="000000"
             className="mt-2 min-h-14 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-[1.75rem] tracking-[0.5em] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           />
@@ -194,7 +274,7 @@ export function LoginForm({
             disabled={loading || code.length < 6}
             className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-[1.05rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-50"
           >
-            {loading ? "מאמת…" : "התחבר"}
+            {loading ? "מאמת…" : mode === "signup" ? "הרשמה והתחברות" : "התחבר"}
           </button>
 
           <div className="mt-3 flex items-center justify-center gap-4 text-[0.82rem] font-semibold">

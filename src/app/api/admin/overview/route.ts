@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { currentUser } from "@/lib/server/current-user";
-import { getActivity, getReports, getUsers } from "@/lib/server/auth-store";
-import type { AdminOverview } from "@/lib/types";
+import {
+  ADMIN_EMAILS,
+  getActivity,
+  getReports,
+  getUsers,
+} from "@/lib/server/auth-store";
+import type { AdminOverview, AuthUser } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -15,11 +20,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const [users, activity, reports] = await Promise.all([
+  const [storedUsers, activity, reports] = await Promise.all([
     getUsers(),
     getActivity(200),
     getReports(),
   ]);
+
+  // The owner accounts always appear, even on fresh serverless instances
+  // where the per-instance file store has no history yet.
+  const users: AuthUser[] = [...storedUsers];
+  for (const email of ADMIN_EMAILS) {
+    if (!users.some((u) => u.email === email)) {
+      const now = new Date().toISOString();
+      users.push({
+        email,
+        role: "admin",
+        createdAt: now,
+        lastLoginAt: now,
+      });
+    }
+  }
 
   const today = new Date().toDateString();
   const loginsToday = activity.filter(
