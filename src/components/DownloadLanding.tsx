@@ -374,7 +374,7 @@ export function DownloadLanding() {
               className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start"
             >
               <a
-                href="/superlive.apk"
+                href="/zerem.apk"
                 download
                 data-testid="download-android"
                 className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-500 px-6 text-[1.02rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.98]"
@@ -580,7 +580,7 @@ export function DownloadLanding() {
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
             <a
-              href="/superlive.apk"
+              href="/zerem.apk"
               download
               className="inline-flex min-h-13 items-center justify-center gap-2.5 rounded-2xl bg-white px-6 text-[1rem] font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50 active:scale-[0.98]"
             >
