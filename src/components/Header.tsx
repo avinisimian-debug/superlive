@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useLive } from "@/lib/store";
 import {
   LogoMark,
@@ -7,6 +8,7 @@ import {
   MapPinIcon,
   BuildingIcon,
   ChevronDownIcon,
+  DownloadIcon,
 } from "./icons";
 
 export function Header({
@@ -41,10 +43,20 @@ export function Header({
             </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[0.64rem] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-500/15">
-            <span className="live-dot" aria-hidden="true" />
-            LIVE
-          </span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/download"
+              aria-label="הורדת האפליקציה"
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-2.5 py-1 text-[0.64rem] font-bold text-white transition active:scale-[0.98]"
+            >
+              <DownloadIcon className="h-3.5 w-3.5" />
+              הורדה
+            </Link>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[0.64rem] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-500/15">
+              <span className="live-dot" aria-hidden="true" />
+              LIVE
+            </span>
+          </div>
         </div>
 
         {/* Summary */}

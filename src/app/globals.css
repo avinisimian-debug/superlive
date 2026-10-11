@@ -67,6 +67,13 @@ body {
   }
 }
 
+/* The marketing landing page must escape the mobile app-shell width. */
+.app-shell:has(> .landing) {
+  max-width: none;
+  background: transparent;
+  box-shadow: none;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -234,6 +241,35 @@ body {
 }
 .animate-card {
   animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+@keyframes aura-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-24px, 18px, 0) scale(1.08);
+  }
+}
+.animate-aura {
+  animation: aura-drift 14s ease-in-out infinite;
 }
 
 @keyframes shimmer {
