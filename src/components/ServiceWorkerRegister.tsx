@@ -2,17 +2,24 @@
 
 import { useEffect } from "react";
 
-/** Registers the PWA service worker in production builds only. */
+/** Cleans up legacy service workers and purges stale caches */
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
-    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
-      return;
+    if (typeof window === "undefined") return;
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const reg of registrations) {
+          reg.unregister().catch(() => undefined);
+        }
+      });
     }
-    const id = window.setTimeout(() => {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-    }, 1200);
-    return () => window.clearTimeout(id);
+    if ("caches" in window) {
+      caches.keys().then((keys) => {
+        for (const key of keys) {
+          caches.delete(key).catch(() => undefined);
+        }
+      });
+    }
   }, []);
 
   return null;
