@@ -58,6 +58,8 @@ export interface Branch {
   /** Human-readable Hebrew opening hours (derived from scheduleIdx). */
   hours: string;
   size: BranchSize;
+  /** Optional exact Waze search string (overrides the auto-generated one). */
+  wazeQuery?: string;
 }
 
 export type ReportSource = "user" | "community";

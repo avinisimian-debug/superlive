@@ -5,6 +5,14 @@ import { CHAINS, type Branch, type BranchSize, type Chain } from "./types";
 const SIZES: BranchSize[] = ["express", "standard", "hyper"];
 
 /**
+ * Exact Waze search strings for branches where the auto-generated
+ * "name + address + city" query would not resolve to the right place.
+ */
+const WAZE_QUERY_OVERRIDES: Record<string, string> = {
+  "b-0509": "רמי לוי ישפרו סנטר מודיעין",
+};
+
+/**
  * Nationwide directory of real Israeli supermarket branches. Coordinates and
  * names come from OpenStreetMap (Overpass API), deduplicated and normalised to
  * a clean Hebrew chain catalogue (see build_data.py).
@@ -21,6 +29,7 @@ export const BRANCHES: Branch[] = RAW_BRANCHES.map(
     scheduleIdx: sch,
     hours: SCHEDULES[sch]?.label ?? "",
     size: SIZES[size] ?? "standard",
+    wazeQuery: WAZE_QUERY_OVERRIDES[id],
   }),
 );
 

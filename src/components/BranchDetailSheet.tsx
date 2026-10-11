@@ -111,7 +111,8 @@ export function BranchDetailSheet({
   );
   const currentHour = date.getHours();
   const wazeQuery = encodeURIComponent(
-    `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
+    branch.wazeQuery ??
+      `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
   );
   const wazeHref = `https://waze.com/ul?q=${wazeQuery}&ll=${branch.lat},${branch.lng}&navigate=yes`;
 

@@ -63,33 +63,29 @@ export async function POST(req: Request) {
 
   await logActivity("otp", "נשלח קוד אימות", email);
 
-  const apiKey = process.env.RESEND_API_KEY;
+  // Brevo transactional email (preferred sender).
+  const apiKey = process.env.BREVO_API_KEY;
   let delivered = false;
   if (apiKey) {
     try {
-      const greeting = name ? `${name}, ` : "";
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          "api-key": apiKey,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM || "Zerem <onboarding@resend.dev>",
-          to: email,
+          sender: { name: "Zerem", email: "aviya.nish@gmail.com" },
+          to: [{ email }],
           subject: `קוד האימות שלך ל-Zerem: ${otp}`,
-          html: `<div dir="rtl" style="font-family:Arial,sans-serif;text-align:center">
-            <h2 style="color:#0f172a">התחברות ל-Zerem</h2>
-            <p style="color:#475569">${greeting}קוד האימות שלך הוא:</p>
-            <p style="font-size:2.2em;font-weight:800;letter-spacing:0.3em;color:#059669;margin:12px 0">${otp}</p>
-            <p style="color:#64748b">הקוד תקף ל-10 דקות.</p>
-          </div>`,
+          htmlContent: `<div dir='rtl' style='font-family:sans-serif;padding:24px;text-align:center;'><h2>קוד האימות שלך ל-Zerem</h2><h1 style='letter-spacing:6px;font-size:36px;color:#0f172a;'>${otp}</h1><p>הקוד בתוקף ל-10 דקות הקרובות.</p></div>`,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       delivered = true;
     } catch (err) {
-      console.error("[Zerem OTP] Resend send failed:", err);
+      console.error("[Zerem OTP] Brevo send failed:", err);
       /* fall through to dev mode so login always works */
     }
   }

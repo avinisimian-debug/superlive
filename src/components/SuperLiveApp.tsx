@@ -19,6 +19,7 @@ import { SupermarketList, type ListItem } from "./SupermarketList";
 import { ReportModal } from "./ReportModal";
 import { BranchDetailSheet } from "./BranchDetailSheet";
 import { CitySheet, type CityOption } from "./CitySheet";
+import { PassiveTracker } from "./PassiveTracker";
 import { Toast } from "./Toast";
 import { RadarIcon } from "./icons";
 
@@ -240,6 +241,7 @@ export function SuperLiveApp() {
         />
       ) : null}
 
+      <PassiveTracker />
       <Toast />
     </>
   );
