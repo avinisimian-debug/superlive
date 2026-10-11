@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import { LiveProvider } from "@/lib/store";
+import { AuthProvider } from "@/lib/auth";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const heebo = Heebo({
@@ -12,14 +13,14 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "סופר-לייב | עומסים וחניה בזמן אמת בסופר",
+  title: "Zerem | זרם — עומסים וחניה בסופרמרקטים בזמן אמת",
   description:
-    "סופר-לייב — המעקב הקהילתי בזמן אמת אחרי עומסים בקופות ומצב חניה בסופרמרקטים בישראל. דיווח של קהילה, בדיקת המצב לפני שיוצאים, וניווט ישר ב-Waze.",
-  applicationName: "סופר-לייב",
+    "Zerem (זרם) — המעקב הקהילתי בזמן אמת אחרי עומסים בקופות ומצב חניה בסופרמרקטים ובמכולות בישראל. דיווח של קהילה, בדיקת המצב לפני שיוצאים, וניווט ישר ב-Waze.",
+  applicationName: "Zerem",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "סופר-לייב",
+    title: "Zerem",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -43,9 +44,11 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="antialiased text-slate-900">
-        <LiveProvider>
-          <div className="app-shell">{children}</div>
-        </LiveProvider>
+        <AuthProvider>
+          <LiveProvider>
+            <div className="app-shell">{children}</div>
+          </LiveProvider>
+        </AuthProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

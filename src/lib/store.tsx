@@ -156,6 +156,20 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       });
       setNow(Date.now());
       setToast("תודה! הדיווח עודכן בלייב 🙌");
+
+      // Persist the report server-side (best-effort, non-blocking).
+      void fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          branchId: branch.id,
+          branchName: branch.name,
+          congestion,
+          parking,
+        }),
+      }).catch(() => {
+        /* offline / server error — local report still applies */
+      });
     },
     [],
   );

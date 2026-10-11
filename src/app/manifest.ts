@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "סופר-לייב — עומסים וחניה בזמן אמת",
-    short_name: "סופר-לייב",
+    name: "Zerem (זרם)",
+    short_name: "Zerem",
     description:
       "המעקב הקהילתי בזמן אמת אחרי עומסים בקופות ומצב חניה בסופרמרקטים בישראל.",
     lang: "he",

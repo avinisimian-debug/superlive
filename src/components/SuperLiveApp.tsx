@@ -188,7 +188,7 @@ export function SuperLiveApp() {
         <footer className="mt-8 px-6 text-center text-[0.68rem] leading-relaxed text-slate-400">
           <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-500">
             <RadarIcon className="h-3.5 w-3.5 text-brand-600" />
-            סופר-לייב · רשת דיווחים קהילתית
+            זרם · רשת דיווחים קהילתית
           </p>
           <p className="mt-1">
             {totalSubmissions > 0

@@ -233,3 +233,30 @@ export function DownloadIcon({ className, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function UserIcon({ className, ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true" {...props}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </svg>
+  );
+}
+
+export function LogoutIcon({ className, ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true" {...props}>
+      <path d="M14 7.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h6.5A1.5 1.5 0 0 0 14 18v-1.5" />
+      <path d="M10 12h10m0 0-3-3m3 3-3 3" />
+    </svg>
+  );
+}
+
+export function ShieldIcon({ className, ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true" {...props}>
+      <path d="M12 3.2 5 6v5.2c0 4.2 2.9 7.6 7 9.6 4.1-2 7-5.4 7-9.6V6l-7-2.8Z" />
+      <path d="m9.2 12 2 2 3.6-4" />
+    </svg>
+  );
+}

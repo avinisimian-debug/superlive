@@ -129,10 +129,10 @@ export function BranchDetailSheet({
 
   const share = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
-    const text = `${branch.name} (${branch.chain}) · עומס ${CONGESTION_LABEL[live.congestion]} · SuperLive`;
+    const text = `${branch.name} (${branch.chain}) · עומס ${CONGESTION_LABEL[live.congestion]} · Zerem`;
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ title: "סופר-לייב", text, url });
+        await navigator.share({ title: "זרם", text, url });
         return;
       }
       if (typeof navigator !== "undefined" && navigator.clipboard) {

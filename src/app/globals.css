@@ -68,7 +68,8 @@ body {
 }
 
 /* The marketing landing page must escape the mobile app-shell width. */
-.app-shell:has(> .landing) {
+.app-shell:has(> .landing),
+.app-shell:has(> .full-bleed) {
   max-width: none;
   background: transparent;
   box-shadow: none;

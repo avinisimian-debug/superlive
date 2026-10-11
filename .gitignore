@@ -38,3 +38,6 @@ next-env.d.ts
 /superlive.apk
 /pwabuilder-package.zip
 /pwabuilder-package/
+
+# runtime auth data (file-backed store)
+/data/*.json

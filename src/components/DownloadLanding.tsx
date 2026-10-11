@@ -56,11 +56,11 @@ const FEATURES: {
 const FAQ: { q: string; a: string }[] = [
   {
     q: "האם האפליקציה בחינם?",
-    a: "כן, סופר-לייב חינמית לחלוטין — בלי מנוי, בלי פרסומות ובלי הרשמה. כל הדיווחים מגיעים מהקהילה ועוזרים לכולם.",
+    a: "כן, זרם חינמית לחלוטין — בלי מנוי, בלי פרסומות ובלי הרשמה. כל הדיווחים מגיעים מהקהילה ועוזרים לכולם.",
   },
   {
     q: "איך מתקינים באייפון?",
-    a: "פותחים את סופר-לייב ב-Safari, מקישים על כפתור השיתוף ⬆️ בתחתית המסך ובוחרים ״הוסף למסך הבית״. האפליקציה תופיע כמו אפליקציה רגילה.",
+    a: "פותחים את זרם ב-Safari, מקישים על כפתור השיתוף ⬆️ בתחתית המסך ובוחרים ״הוסף למסך הבית״. האפליקציה תופיע כמו אפליקציה רגילה.",
   },
   {
     q: "איך מתקינים באנדרואיד?",
@@ -76,15 +76,17 @@ const PREVIEW_BRANCHES: {
   dot: string;
   text: string;
   bg: string;
+  parking: string;
 }[] = [
   {
-    chain: "רמי לוי",
-    name: "רמי לוי מבשרת ציון",
+    chain: "שופרסל דיל",
+    name: "שופרסל דיל מגדלי תל אביב",
     status: "free",
     label: "פנוי",
     dot: "bg-emerald-500",
     text: "text-emerald-700",
     bg: "bg-emerald-50",
+    parking: "חניה חלקית",
   },
   {
     chain: "שופרסל",
@@ -94,15 +96,17 @@ const PREVIEW_BRANCHES: {
     dot: "bg-amber-500",
     text: "text-amber-700",
     bg: "bg-amber-50",
+    parking: "חניה בשפע",
   },
   {
-    chain: "מכולת שכונתית",
-    name: "צרכניית הישוב מבוא חורון",
+    chain: "רמי לוי",
+    name: "רמי לוי מבשרת ציון",
     status: "free",
     label: "פנוי",
     dot: "bg-emerald-500",
     text: "text-emerald-700",
     bg: "bg-emerald-50",
+    parking: "חניה בשפע",
   },
 ];
 
@@ -149,7 +153,7 @@ function PhoneMockup() {
               <div className="flex items-center gap-2">
                 <LogoMark className="h-7 w-7" />
                 <span className="text-[0.95rem] font-extrabold text-white">
-                  סופר-לייב
+                  זרם
                 </span>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-0.5 text-[0.6rem] font-bold text-white">
@@ -191,7 +195,7 @@ function PhoneMockup() {
                   </span>
                   <span className="inline-flex items-center gap-1 text-[0.64rem] font-medium text-slate-500">
                     <CarIcon className="h-3.5 w-3.5 text-slate-400" />
-                    חניה בשפע
+                    {b.parking}
                   </span>
                 </div>
               </div>
@@ -274,7 +278,7 @@ export function DownloadLanding() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "סופר-לייב",
+          title: "זרם",
           text: "לדעת מתי הסופר פנוי — עוד לפני שיוצאים מהבית.",
           url,
         });
@@ -305,8 +309,8 @@ export function DownloadLanding() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
           <Link href="/download" className="flex items-center gap-2.5">
             <LogoMark className="h-9 w-9" />
-            <span className="text-[1.2rem] font-extrabold tracking-tight text-slate-900">
-              סופר<span className="text-emerald-600">-לייב</span>
+            <span className="flex items-center gap-2 text-[1.2rem] font-extrabold tracking-tight text-slate-900">
+              זרם<span className="live-dot" aria-hidden="true" />
             </span>
           </Link>
           <nav className="hidden items-center gap-7 text-[0.92rem] font-semibold text-slate-600 md:flex">
@@ -319,14 +323,28 @@ export function DownloadLanding() {
             <a className="transition hover:text-slate-900" href="#faq">
               שאלות
             </a>
+            <Link
+              className="transition hover:text-slate-900"
+              href="/"
+            >
+              לאפליקציה
+            </Link>
           </nav>
-          <a
-            href="#download"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-slate-900 px-4 text-[0.88rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
-          >
-            <DownloadIcon className="h-4 w-4" />
-            הורדה
-          </a>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="inline-flex min-h-10 items-center rounded-xl px-3 text-[0.88rem] font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98]"
+            >
+              התחברות
+            </Link>
+            <a
+              href="#download"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-slate-900 px-4 text-[0.88rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
+            >
+              <DownloadIcon className="h-4 w-4" />
+              הורדה
+            </a>
+          </div>
         </div>
       </header>
 
@@ -347,7 +365,7 @@ export function DownloadLanding() {
             </h1>
 
             <p className="mx-auto mt-5 max-w-xl text-[1.05rem] leading-relaxed text-slate-500 lg:mx-0 lg:text-[1.15rem]">
-              SuperLive (סופר-לייב) — המעקב הקהילתי בזמן אמת לעומסי קופות וחניה
+              Zerem (זרם) — המעקב הקהילתי בזמן אמת לעומסי קופות וחניה
               בסופרמרקטים ובמכולות בישראל.
             </p>
 
@@ -475,7 +493,7 @@ export function DownloadLanding() {
               יש לכם מחשב? סרקו כדי לפתוח בנייד
             </h2>
             <p className="mt-4 max-w-lg text-[1.02rem] leading-relaxed text-slate-300">
-              כוונו את מצלמת הטלפון אל הקוד ופתחו את סופר-לייב ישירות במכשיר.
+              כוונו את מצלמת הטלפון אל הקוד ופתחו את זרם ישירות במכשיר.
               באנדרואיד תורידו APK, ובאייפון תוסיפו למסך הבית בשתי הקשות.
             </p>
 
@@ -557,7 +575,7 @@ export function DownloadLanding() {
             מוכנים לדעת לפני שיוצאים?
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-[1.02rem] text-emerald-50">
-            הורידו את סופר-לייב בחינם והצטרפו לאלפי קונים שכבר חוסכים זמן
+            הורידו את זרם בחינם והצטרפו לאלפי קונים שכבר חוסכים זמן
             ועצבים בכל קנייה.
           </p>
           <div className="relative mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
@@ -587,9 +605,9 @@ export function DownloadLanding() {
           <div className="flex items-center gap-2.5">
             <LogoMark className="h-8 w-8" />
             <div className="leading-tight">
-              <p className="font-extrabold text-slate-900">סופר-לייב</p>
+              <p className="font-extrabold text-slate-900">זרם</p>
               <p className="text-[0.72rem] font-semibold text-slate-400">
-                SuperLive
+                Zerem
               </p>
             </div>
           </div>
@@ -626,7 +644,7 @@ export function DownloadLanding() {
           </button>
         </div>
         <div className="border-t border-slate-200/70 px-5 py-5 text-center text-[0.8rem] text-slate-400 sm:px-8">
-          © {2026} סופר-לייב · נבנה באהבה עבור הקהילה בישראל 🇮🇱
+          © {2026} זרם · נבנה באהבה עבור הקהילה בישראל 🇮🇱
         </div>
       </footer>
 

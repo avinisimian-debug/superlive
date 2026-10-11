@@ -84,3 +84,37 @@ export interface UserLocation {
   lng: number;
   label: string;
 }
+
+export type UserRole = "admin" | "user";
+
+/** A registered Zerem account (persisted in data/users.json). */
+export interface AuthUser {
+  email: string;
+  /** ISO timestamp of first registration. */
+  createdAt: string;
+  /** ISO timestamp of the most recent successful login. */
+  lastLoginAt: string;
+  role: UserRole;
+}
+
+export type ActivityType = "login" | "otp" | "report";
+
+/** A single row in the admin activity feed (data/activity.json). */
+export interface ActivityEvent {
+  at: string;
+  type: ActivityType;
+  email?: string;
+  text: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  loginsToday: number;
+  totalReports: number;
+}
+
+export interface AdminOverview {
+  stats: AdminStats;
+  users: AuthUser[];
+  activity: ActivityEvent[];
+}

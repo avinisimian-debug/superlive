@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   DownloadIcon,
 } from "./icons";
+import { AuthButton } from "./AuthButton";
 
 export function Header({
   totalBranches,
@@ -34,28 +35,26 @@ export function Header({
           <div className="flex items-center gap-2.5">
             <LogoMark className="h-8 w-8" />
             <div className="leading-none">
-              <p className="text-[1.28rem] font-extrabold tracking-tight text-slate-900">
-                סופר<span className="text-emerald-600">-לייב</span>
+              <p className="flex items-center gap-2 text-[1.28rem] font-extrabold tracking-tight text-slate-900">
+                זרם
+                <span className="live-dot" aria-hidden="true" />
               </p>
               <p className="mt-1 text-[0.54rem] font-bold uppercase tracking-[0.4em] text-slate-400">
-                SuperLive
+                Zerem
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Link
               href="/download"
               aria-label="הורדת האפליקציה"
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-2.5 py-1 text-[0.64rem] font-bold text-white transition active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[0.64rem] font-bold text-slate-700 ring-1 ring-inset ring-slate-200 transition active:scale-[0.98]"
             >
               <DownloadIcon className="h-3.5 w-3.5" />
               הורדה
             </Link>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[0.64rem] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-500/15">
-              <span className="live-dot" aria-hidden="true" />
-              LIVE
-            </span>
+            <AuthButton />
           </div>
         </div>
 
