@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    var(--font-heebo), "Heebo", "Assistant", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", "Helvetica Neue", Arial,
+    sans-serif;
+
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  --color-ink-900: #0b1220;
+  --color-ink-800: #111a2e;
+  --color-ink-700: #1e293b;
+
+  --color-free: #16a34a;
+  --color-medium: #f59e0b;
+  --color-heavy: #ef4444;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -14px rgba(15, 23, 42, 0.16);
+  --shadow-lift: 0 2px 6px rgba(15, 23, 42, 0.05), 0 22px 50px -22px rgba(15, 23, 42, 0.28);
+  --shadow-float: 0 20px 60px -18px rgba(15, 23, 42, 0.34);
+  --shadow-glow: 0 10px 40px -12px rgba(16, 185, 129, 0.5);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #eef1f5;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* App shell keeps content at a comfortable mobile width on larger screens. */
+.app-shell {
+  width: 100%;
+  max-width: 27rem;
+  margin-inline: auto;
+  min-height: 100dvh;
+  background: #f7f9fc;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04);
+  overflow-x: clip;
+}
+
+@media (min-width: 640px) {
+  .app-shell {
+    box-shadow:
+      0 0 0 1px rgba(15, 23, 42, 0.05),
+      0 40px 90px -30px rgba(15, 23, 42, 0.28);
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
+}
+
+/* Fade the horizontal scroll edges of the chain strip. */
+.edge-fade {
+  -webkit-mask-image: linear-gradient(
+    to left,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to left,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%
+  );
+}
+
+/* ---- Animations ---- */
+
+@keyframes live-ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  height: 0.6rem;
+  width: 0.6rem;
+}
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #4ade80;
+  animation: live-ring 1.8s ease-out infinite;
+}
+.live-dot::after {
+  content: "";
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+}
+
+/* Small pulsing ring used on the "open now" status dot. */
+@keyframes soft-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  80% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.open-dot {
+  position: relative;
+  display: inline-flex;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 999px;
+  background: #10b981;
+}
+.open-dot::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 999px;
+  background: #34d399;
+  animation: soft-ring 2s ease-out infinite;
+}
+
+/* GPS button pulse while locating / when actively using GPS. */
+@keyframes gps-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 0.55rem rgba(16, 185, 129, 0);
+  }
+}
+.gps-active {
+  animation: gps-pulse 2.2s ease-out infinite;
+}
+
+@keyframes rise-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade {
+  animation: fade-in 0.25s ease-out;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: translateY(14px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.animate-pop {
+  animation: pop-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-card {
+  animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(226, 232, 240, 0.65) 20%,
+    rgba(241, 245, 249, 0.95) 42%,
+    rgba(226, 232, 240, 0.65) 64%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-fade,
+  .animate-pop,
+  .animate-card,
+  .shimmer,
+  .live-dot::before,
+  .open-dot::before,
+  .gps-active {
+    animation: none !important;
+  }
+}
