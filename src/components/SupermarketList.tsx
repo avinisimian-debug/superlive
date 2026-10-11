@@ -11,36 +11,53 @@ export interface ListItem {
   distance: number;
 }
 
-const PAGE_SIZE = 24;
+/** Branches revealed up-front, and the size of every subsequent page. */
+const PAGE_SIZE = 20;
 
 export function SupermarketList({
   items,
   now,
   onReport,
+  onOpen,
 }: {
   items: ListItem[];
   now: number;
   onReport: (branch: Branch) => void;
+  onOpen: (branch: Branch) => void;
 }) {
   const [visible, setVisible] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLLIElement | null>(null);
+  // Loading is "armed" only after a genuine user scroll, so the list can never
+  // run away loading pages on its own while the user sits at the top.
+  const armedRef = useRef(false);
+
+  useEffect(() => {
+    const arm = () => {
+      armedRef.current = true;
+    };
+    window.addEventListener("scroll", arm, { passive: true });
+    return () => window.removeEventListener("scroll", arm);
+  }, []);
 
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible((current) =>
-            current >= items.length ? current : current + PAGE_SIZE,
-          );
-        }
+        if (!armedRef.current) return;
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        armedRef.current = false;
+        setVisible((current) =>
+          current >= items.length
+            ? current
+            : Math.min(current + PAGE_SIZE, items.length),
+        );
       },
-      { rootMargin: "600px 0px" },
+      { rootMargin: "0px", threshold: 0.01 },
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [items.length]);
+  }, [items.length, visible]);
 
   if (items.length === 0) {
     return (
@@ -59,6 +76,7 @@ export function SupermarketList({
   }
 
   const shown = items.slice(0, visible);
+  const done = visible >= items.length;
 
   return (
     <>
@@ -71,21 +89,33 @@ export function SupermarketList({
               distance={item.distance}
               now={now}
               onReport={onReport}
+              onOpen={onOpen}
             />
           </li>
         ))}
-        {visible < items.length ? (
-          <li ref={sentinelRef} aria-hidden="true" className="h-1" />
-        ) : null}
+        {!done ? <li ref={sentinelRef} aria-hidden="true" className="h-px" /> : null}
       </ul>
-      {visible < items.length ? (
-        <p className="mt-3 text-center text-[0.72rem] font-semibold text-slate-400">
-          טוען עוד סניפים…
-        </p>
+
+      {!done ? (
+        <div className="mt-4 flex items-center justify-center gap-2 text-[0.72rem] font-semibold text-slate-400">
+          <span
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-400"
+            aria-hidden="true"
+          />
+          טוענים עוד סניפים…
+        </div>
       ) : (
-        <p className="mt-4 text-center text-[0.72rem] font-semibold text-slate-400">
-          מציגים את כל {items.length} הסניפים
-        </p>
+        <div
+          className="mt-6 flex items-center gap-3 px-6"
+          data-testid="end-of-list"
+        >
+          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+          <span className="text-center text-[0.72rem] font-semibold text-slate-400">
+            הגעת לסוף התוצאות · {items.length}{" "}
+            {items.length === 1 ? "סניף" : "סניפים"}
+          </span>
+          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+        </div>
       )}
     </>
   );

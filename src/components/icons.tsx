@@ -172,6 +172,15 @@ export function SlidersIcon({ className, ...props }: IconProps) {
   );
 }
 
+export function ShareIcon({ className, ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true" {...props}>
+      <path d="M12 15V3.5m0 0 3.5 3.5M12 3.5 8.5 7" />
+      <path d="M5 12.5v6a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-6" />
+    </svg>
+  );
+}
+
 export function SparkIcon({ className, ...props }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...props}>

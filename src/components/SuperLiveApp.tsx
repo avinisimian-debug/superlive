@@ -17,6 +17,7 @@ import { FilterBar, type ChainFilter, type SortMode } from "./FilterBar";
 import { StatsSummary } from "./StatsSummary";
 import { SupermarketList, type ListItem } from "./SupermarketList";
 import { ReportModal } from "./ReportModal";
+import { BranchDetailSheet } from "./BranchDetailSheet";
 import { CitySheet, type CityOption } from "./CitySheet";
 import { Toast } from "./Toast";
 import { RadarIcon } from "./icons";
@@ -40,6 +41,7 @@ export function SuperLiveApp() {
   const [lowCongestion, setLowCongestion] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [reporting, setReporting] = useState<Branch | null>(null);
+  const [detail, setDetail] = useState<Branch | null>(null);
 
   const deferredSearch = useDeferredValue(search);
   const date = useMemo(() => new Date(now), [now]);
@@ -178,6 +180,7 @@ export function SuperLiveApp() {
               items={items}
               now={now}
               onReport={setReporting}
+              onOpen={setDetail}
             />
           </>
         )}
@@ -208,6 +211,20 @@ export function SuperLiveApp() {
             setCityOpen(false);
           }}
           onClose={() => setCityOpen(false)}
+        />
+      ) : null}
+
+      {detail ? (
+        <BranchDetailSheet
+          branch={detail}
+          live={getLive(detail)}
+          distance={distanceKm(location.lat, location.lng, detail.lat, detail.lng)}
+          now={now}
+          onClose={() => setDetail(null)}
+          onReport={(branch) => {
+            setDetail(null);
+            setReporting(branch);
+          }}
         />
       ) : null}
 

@@ -24,18 +24,30 @@ export function SupermarketCard({
   distance,
   now,
   onReport,
+  onOpen,
 }: {
   branch: Branch;
   live: LiveState;
   distance: number | null;
   now: number;
   onReport: (branch: Branch) => void;
+  onOpen: (branch: Branch) => void;
 }) {
   const open = isOpenAt(branch.scheduleIdx, new Date(now));
   const wazeHref = `https://waze.com/ul?ll=${branch.lat},${branch.lng}&navigate=yes`;
 
   return (
-    <article className="animate-card rounded-2xl border border-slate-100 bg-white p-4 shadow-card transition-shadow duration-300 hover:shadow-lift">
+    <article className="animate-card relative rounded-2xl border border-slate-100 bg-white p-4 shadow-card transition-shadow duration-300 hover:shadow-lift">
+      {/* Whole-card tap target → opens the full detail sheet. Sits above the
+          static content but below the Waze / report buttons. */}
+      <button
+        type="button"
+        onClick={() => onOpen(branch)}
+        aria-label={`הצג פרטים מלאים עבור ${branch.name}`}
+        data-testid="card-open"
+        className="absolute inset-0 z-10 rounded-2xl outline-none transition focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500/40"
+      />
+
       {/* Line 1 — chain, branch name, city + open status */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -104,8 +116,8 @@ export function SupermarketCard({
         ) : null}
       </p>
 
-      {/* Line 4 — compact action bar */}
-      <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+      {/* Line 4 — compact action bar (above the tap overlay) */}
+      <div className="relative z-20 mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
         <a
           href={wazeHref}
           target="_blank"

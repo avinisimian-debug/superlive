@@ -53,6 +53,93 @@ export function isOpenAt(scheduleIdx: number, date: Date): boolean {
   return minutes >= slot[0] && minutes < slot[1];
 }
 
+const DAY_NAMES = [
+  "ראשון",
+  "שני",
+  "שלישי",
+  "רביעי",
+  "חמישי",
+  "שישי",
+  "שבת",
+];
+
+/** Format minutes since midnight as a 24-hour "HH:MM" label. */
+export function minutesToLabel(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function slotLabel(slot: [number, number] | null | undefined): string {
+  if (!slot) return "סגור";
+  return `${minutesToLabel(slot[0])}–${minutesToLabel(slot[1])}`;
+}
+
+export interface WeeklyHoursRow {
+  key: string;
+  label: string;
+  value: string;
+}
+
+/**
+ * Human-readable weekly opening-hours rows for a schedule profile, grouped the
+ * way Israeli shoppers think about them: Sun–Wed, Thu (extended eve), Fri &
+ * holiday eve, and Saturday night (מוצ״ש).
+ */
+export function weeklyHours(scheduleIdx: number): WeeklyHoursRow[] {
+  const profile = SCHEDULES[scheduleIdx];
+  const days = profile?.days ?? [];
+  return [
+    { key: "sun-wed", label: "א׳–ד׳", value: slotLabel(days[0]) },
+    { key: "thu", label: "ה׳", value: slotLabel(days[4]) },
+    { key: "fri", label: "ו׳ וערב חג", value: slotLabel(days[5]) },
+    { key: "sat", label: "מוצ״ש", value: slotLabel(days[6]) },
+  ];
+}
+
+export interface OpenStatus {
+  open: boolean;
+  text: string;
+}
+
+/** Rich open/closed label with the next closing or opening time. */
+export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
+  const profile = SCHEDULES[scheduleIdx];
+  if (!profile) return { open: true, text: "פתוח 24/7" };
+  const minutes = date.getHours() * 60 + date.getMinutes();
+  const today = profile.days[date.getDay()];
+  if (today && minutes >= today[0] && minutes < today[1]) {
+    return {
+      open: true,
+      text: `פתוח עכשיו · נסגר ב-${minutesToLabel(today[1])}`,
+    };
+  }
+  const tomorrow = profile.days[(date.getDay() + 1) % 7];
+  if (today && minutes < today[0]) {
+    return {
+      open: false,
+      text: `סגור · נפתח היום ב-${minutesToLabel(today[0])}`,
+    };
+  }
+  if (tomorrow) {
+    return {
+      open: false,
+      text: `סגור · נפתח מחר ב-${minutesToLabel(tomorrow[0])}`,
+    };
+  }
+  for (let i = 2; i < 7; i++) {
+    const day = (date.getDay() + i) % 7;
+    const slot = profile.days[day];
+    if (slot) {
+      return {
+        open: false,
+        text: `סגור · נפתח ביום ${DAY_NAMES[day]} ב-${minutesToLabel(slot[0])}`,
+      };
+    }
+  }
+  return { open: false, text: "סגור" };
+}
+
 /** Short "closing soon / opens at" hint, or null when not applicable. */
 export function scheduleHint(scheduleIdx: number, date: Date): string | null {
   const profile = SCHEDULES[scheduleIdx];
