@@ -52,13 +52,19 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           from: process.env.RESEND_FROM || "Zerem <onboarding@resend.dev>",
           to: email,
-          subject: "קוד ההתחברות שלך ל-Zerem",
-          html: `<div dir="rtl" style="font-family:Arial">קוד האימות שלך הוא <b style="font-size:1.4em">${otp}</b><br/>הקוד תקף ל-10 דקות.</div>`,
+          subject: `קוד האימות שלך ל-Zerem: ${otp}`,
+          html: `<div dir="rtl" style="font-family:Arial,sans-serif;text-align:center">
+            <h2 style="color:#0f172a">התחברות ל-Zerem</h2>
+            <p style="color:#475569">קוד האימות שלך הוא:</p>
+            <p style="font-size:2.2em;font-weight:800;letter-spacing:0.3em;color:#059669;margin:12px 0">${otp}</p>
+            <p style="color:#64748b">הקוד תקף ל-10 דקות.</p>
+          </div>`,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       return NextResponse.json({ success: true, message: "הקוד נשלח למייל" });
-    } catch {
+    } catch (err) {
+      console.error("[Zerem OTP] Resend send failed:", err);
       /* fall through to dev mode so login always works */
     }
   }

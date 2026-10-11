@@ -41,3 +41,4 @@ next-env.d.ts
 
 # runtime auth data (file-backed store)
 /data/*.json
+.env*

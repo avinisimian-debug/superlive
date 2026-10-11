@@ -42,7 +42,7 @@ export function LoginForm({
         return;
       }
       setStep("code");
-      setCode("");
+      setCode(data.devOtp ?? "");
       setDevOtp(data.devOtp ?? null);
       setNotice("שלחנו קוד בן 6 ספרות למייל שלך");
     } catch {
@@ -88,8 +88,8 @@ export function LoginForm({
         </h2>
         <p className="mt-1 text-[0.9rem] text-slate-500">
           {step === "email"
-            ? "נשלח לך קוד בן 6 ספרות להתחברות מאובטחת — בלי סיסמה."
-            : "הזינו את הקוד שקיבלתם במייל."}
+            ? "הזן את כתובת המייל שלך לקבלת קוד אימות"
+            : "הזן את קוד האימות בן 6 הספרות שנשלח למייל"}
         </p>
       </div>
 
@@ -129,7 +129,7 @@ export function LoginForm({
             type="submit"
             data-testid="login-send"
             disabled={loading}
-            className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-500 text-[0.98rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
+            className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-600 to-teal-500 text-[1.05rem] font-bold text-white shadow-glow transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
           >
             {loading ? "שולח קוד…" : "שלח קוד אימות"}
           </button>
@@ -157,12 +157,18 @@ export function LoginForm({
           </p>
 
           {devOtp ? (
-            <p
+            <button
+              type="button"
               data-testid="dev-otp"
-              className="mx-auto mt-3 w-fit rounded-lg bg-amber-50 px-3 py-1.5 text-center text-[0.78rem] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200"
+              onClick={() => setCode(devOtp)}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2.5 text-center text-[0.8rem] font-semibold leading-snug text-amber-800 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100 active:scale-[0.99]"
             >
-              מצב פיתוח · הקוד שלך: <span className="font-mono">{devOtp}</span>
-            </p>
+              קוד אימות לבדיקה:{" "}
+              <span className="font-mono font-extrabold tracking-wider">
+                {devOtp}
+              </span>{" "}
+              (חבר RESEND_API_KEY לשליחה ישירה למייל)
+            </button>
           ) : null}
 
           <label className="mt-4 block text-[0.82rem] font-bold text-slate-700">
@@ -179,14 +185,14 @@ export function LoginForm({
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             placeholder="000000"
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-[1.4rem] tracking-[0.5em] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className="mt-2 min-h-14 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-[1.75rem] tracking-[0.5em] text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           />
 
           <button
             type="submit"
             data-testid="login-verify"
             disabled={loading || code.length < 6}
-            className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-[0.98rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-50"
+            className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-[1.05rem] font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-50"
           >
             {loading ? "מאמת…" : "התחבר"}
           </button>

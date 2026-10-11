@@ -22,13 +22,13 @@ export function LoginScreen() {
   }, [user, redirect, router]);
 
   return (
-    <div className="full-bleed relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-slate-50 px-5 py-12">
+    <div className="full-bleed relative flex min-h-dvh w-full items-center justify-center overflow-y-auto bg-slate-50 px-5 py-8">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="animate-aura absolute -top-32 right-[-10%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(closest-side,rgba(16,185,129,0.2),transparent)]" />
         <div className="absolute bottom-[-8rem] left-[-8rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(closest-side,rgba(56,189,248,0.16),transparent)]" />
       </div>
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative my-auto w-full max-w-md">
         <Link
           href="/"
           className="mb-5 flex items-center justify-center gap-2 text-slate-500 transition hover:text-slate-800"
