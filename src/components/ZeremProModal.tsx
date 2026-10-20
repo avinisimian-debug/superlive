@@ -15,6 +15,7 @@ import {
 type PaymentMethod = "card" | "bit" | "paypal";
 
 const BIT_PAY_URL = "https://www.bitpay.co.il/app/share-info?i=Eok7YIlA&j=true";
+const PAYBOX_PAY_URL = "https://links.payboxapp.com/0DhDWFtCo7b";
 
 export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const { isPro, togglePro, showToast } = useLive();
@@ -95,10 +96,8 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
 
   const handlePayBoxApp = () => {
     if (typeof window !== "undefined") {
-      window.location.href = `https://payboxapp.page.link/app`;
-      navigator.clipboard.writeText("055-557-3090");
-      setCopied(true);
-      showToast("מספר הטלפון הועתק: 055-557-3090");
+      window.open(PAYBOX_PAY_URL, "_blank");
+      showToast("פותח את קבוצת התשלום ב-PayBox (₪9.90)");
     }
   };
 
@@ -368,9 +367,9 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
             {method === "bit" && (
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs text-blue-950">
-                  <p className="font-black text-sm">תשלום ישיר ב-Bit (אביה ברוך נסימיאן · Zerem)</p>
+                  <p className="font-black text-sm">תשלום ישיר ב-Bit או PayBox (אביה נסימיאן · Zerem)</p>
                   <p className="mt-1 text-slate-600">
-                    לחצו על הכפתור למטה למעבר ישיר לבקשת התשלום ב-Bit על סך <strong>₪9.90</strong>.
+                    לחצו על Bit או PayBox למעבר ישיר לקבוצת התשלום על סך <strong>₪9.90</strong>:
                   </p>
                 </div>
 
@@ -387,7 +386,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                     onClick={handlePayBoxApp}
                     className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 text-xs font-black text-white hover:bg-sky-700 transition"
                   >
-                    <span>פתח אפליקציית PayBox</span>
+                    <span>שלם ₪9.90 ב-PayBox ↗</span>
                   </button>
                 </div>
 
