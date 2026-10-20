@@ -65,16 +65,16 @@ export function PersonalArea({
       {/* Header */}
       <div className="flex items-center justify-between pb-3">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-slate-900">
+          <h1 className="text-xl font-black tracking-tight text-white">
             אזור אישי
           </h1>
-          <p className="text-xs text-slate-500">
-            ניהול חשבון, מועדפים ודיווחי עומס
+          <p className="text-xs text-slate-400">
+            פרופיל משתמש, סופרים שמורים ודיווחי קהילה
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[0.7rem] font-bold text-emerald-700">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Zerem Live
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 px-2.5 py-1 text-[0.7rem] font-bold text-cyan-300">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+          Zerem Pro
         </span>
       </div>
 
@@ -82,156 +82,111 @@ export function PersonalArea({
         /* Logged In View */
         <div className="space-y-4">
           {/* Profile Card */}
-          <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50/50 p-5 shadow-card">
+          <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-xl font-black text-white shadow-md shadow-emerald-500/20">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/30 bg-gradient-to-tr from-cyan-600 to-blue-600 text-xl font-black text-white shadow-md shadow-cyan-500/20">
                 {(user.name ? user.name[0] : user.email[0]).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="truncate text-base font-extrabold text-slate-900">
+                  <h2 className="truncate text-base font-extrabold text-white">
                     {user.name || "חבר קהילת זרם"}
                   </h2>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[0.64rem] font-bold ${
+                    className={`rounded-full border px-2 py-0.5 text-[0.64rem] font-bold ${
                       user.role === "admin"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-emerald-100 text-emerald-800"
+                        ? "border-amber-500/40 bg-amber-950/60 text-amber-300"
+                        : "border-cyan-500/40 bg-cyan-950/60 text-cyan-300"
                     }`}
                   >
-                    {user.role === "admin" ? "מנהל מערכת" : "תורם קהילה"}
+                    {user.role === "admin" ? "מנהל מערכת" : "תורם קהילה פעיל"}
                   </span>
                 </div>
-                <p dir="ltr" className="truncate text-xs text-slate-500 text-right mt-0.5">
+                <p dir="ltr" className="truncate text-xs text-slate-400 text-right mt-0.5">
                   {user.email}
                 </p>
               </div>
             </div>
 
             {/* Stats Row */}
-            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-center">
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-slate-800/80 pt-4 text-center">
               <button
                 type="button"
                 onClick={onGoToFavorites}
-                className="rounded-xl bg-slate-50 p-2.5 transition hover:bg-slate-100 active:scale-95"
+                className="rounded-xl border border-slate-800 bg-slate-850 p-2.5 transition hover:border-slate-700"
               >
-                <div className="flex items-center justify-center gap-1 text-amber-500">
+                <div className="flex items-center justify-center gap-1 text-amber-400">
                   <StarIcon filled className="h-4 w-4" />
-                  <span className="text-base font-black text-slate-900">
+                  <span className="text-base font-black tabular-nums">
                     {favorites.length}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-bold text-slate-500">
+                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
                   מועדפים
                 </p>
               </button>
 
-              <div className="rounded-xl bg-slate-50 p-2.5">
-                <div className="flex items-center justify-center gap-1 text-emerald-600">
-                  <UsersIcon className="h-4 w-4" />
-                  <span className="text-base font-black text-slate-900">
-                    {myReports.length || totalSubmissions}
+              <div className="rounded-xl border border-slate-800 bg-slate-850 p-2.5">
+                <div className="flex items-center justify-center gap-1 text-cyan-400">
+                  <SparkIcon className="h-4 w-4" />
+                  <span className="text-base font-black tabular-nums">
+                    {myReports.length}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-bold text-slate-500">
-                  דיווחים
+                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
+                  דיווחים שלי
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-2.5">
-                <div className="flex items-center justify-center gap-1 text-brand-600">
-                  <SparkIcon className="h-4 w-4 text-sky-500" />
-                  <span className="text-base font-black text-slate-900">
-                    {(myReports.length || totalSubmissions) * 15 + 50}
+              <div className="rounded-xl border border-slate-800 bg-slate-850 p-2.5">
+                <div className="flex items-center justify-center gap-1 text-emerald-400">
+                  <UsersIcon className="h-4 w-4" />
+                  <span className="text-base font-black tabular-nums">
+                    {totalSubmissions}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-bold text-slate-500">
-                  נקודות קהילה
+                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
+                  סה״כ בקהילה
                 </p>
               </div>
             </div>
 
-            {/* Admin Link if Admin */}
             {user.role === "admin" ? (
-              <div className="mt-4 border-t border-slate-100 pt-3">
+              <div className="mt-4 border-t border-slate-800/80 pt-3">
                 <Link
                   href="/admin"
-                  className="flex items-center justify-between rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/40 py-2.5 text-xs font-bold text-amber-300 transition hover:bg-amber-950/70"
                 >
-                  <span className="flex items-center gap-2">
-                    <ShieldIcon className="h-4 w-4 text-emerald-400" />
-                    כניסה לפאנל ניהול אדמין
-                  </span>
-                  <span className="text-[0.7rem] text-slate-400">מעבר לדשבורד &larr;</span>
+                  <ShieldIcon className="h-4 w-4" />
+                  כניסה לדשבורד מנהל המערכת
                 </Link>
               </div>
             ) : null}
           </section>
 
-          {/* My Recent Reports */}
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card">
-            <h3 className="flex items-center gap-2 text-sm font-black text-slate-900">
-              <ClockIcon className="h-4 w-4 text-emerald-600" />
-              הדיווחים שלי בלייב
-            </h3>
-            {myReports.length > 0 ? (
-              <ul className="mt-3 divide-y divide-slate-100">
-                {myReports.slice(0, 5).map((rep, idx) => (
-                  <li
-                    key={`${rep.branchId}-${rep.at}-${idx}`}
-                    className="flex items-center justify-between py-2.5"
-                  >
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">
-                        {rep.branchName}
-                      </p>
-                      <p className="mt-0.5 text-[0.7rem] text-slate-500">
-                        {CONGESTION_LABELS[rep.congestion] || "עומס עודכן"} ·{" "}
-                        {PARKING_LABELS[rep.parking] || "חניה עודכנה"}
-                      </p>
-                    </div>
-                    <span className="text-[0.68rem] font-medium text-slate-400">
-                      {formatTimeAgo(rep.at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="mt-3 rounded-2xl bg-slate-50 p-4 text-center">
-                <p className="text-xs font-semibold text-slate-600">
-                  טרם דיווחת עומס בסופרמרקט
-                </p>
-                <p className="mt-1 text-[0.7rem] text-slate-400">
-                  בפעם הבאה שאתם בקניות, לחצו על כפתור &quot;דווח עומס בסניף&quot; ועזרו
-                  לישראלים לחסוך זמן יקר.
-                </p>
-              </div>
-            )}
-          </section>
-
           {/* Download & Install App */}
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card">
-            <h3 className="flex items-center gap-2 text-sm font-black text-slate-900">
-              <DownloadIcon className="h-4 w-4 text-sky-500" />
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
+            <h3 className="flex items-center gap-2 text-sm font-black text-white">
+              <DownloadIcon className="h-4 w-4 text-cyan-400" />
               הורדת אפליקציית Zerem למכשיר
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               התקינו את האפליקציה במסך הבית לגישה מיידית לפני שיוצאים לקניות.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Link
                 href="/download"
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
               >
-                <AppleIcon className="h-4 w-4" />
+                <AppleIcon className="h-4 w-4 text-slate-300" />
                 אייפון (iOS)
               </Link>
               <a
                 href="/zerem.apk"
                 download="zerem.apk"
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
               >
-                <AndroidIcon className="h-4 w-4 text-emerald-600" />
+                <AndroidIcon className="h-4 w-4 text-emerald-400" />
                 אנדרואיד (APK)
               </a>
             </div>
@@ -242,7 +197,7 @@ export function PersonalArea({
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50/60 py-3 text-xs font-bold text-red-600 transition hover:bg-red-100/60 active:scale-98 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/30 py-3 text-xs font-bold text-rose-300 transition hover:bg-rose-950/60 active:scale-98 disabled:opacity-50"
           >
             <LogoutIcon className="h-4 w-4" />
             {loggingOut ? "מתנתק…" : "התנתקות מהחשבון"}
@@ -251,7 +206,7 @@ export function PersonalArea({
       ) : (
         /* Logged Out View */
         <div className="space-y-4">
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card">
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
             <LoginForm
               title="התחברו כדי לשמור מועדפים ולדווח"
               onSuccess={() => {
@@ -261,28 +216,28 @@ export function PersonalArea({
           </section>
 
           {/* App download section */}
-          <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card">
-            <h3 className="flex items-center gap-2 text-sm font-black text-slate-900">
-              <DownloadIcon className="h-4 w-4 text-sky-500" />
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
+            <h3 className="flex items-center gap-2 text-sm font-black text-white">
+              <DownloadIcon className="h-4 w-4 text-cyan-400" />
               הורדת אפליקציית Zerem
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               קבלו גישה ישירה למפת העומסים המלאה של ישראל, סופרים פנויים וניווט Waze ישיר.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Link
                 href="/download"
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
               >
-                <AppleIcon className="h-4 w-4" />
+                <AppleIcon className="h-4 w-4 text-slate-300" />
                 התקנה לאייפון
               </Link>
               <a
                 href="/zerem.apk"
                 download="zerem.apk"
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
+                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
               >
-                <AndroidIcon className="h-4 w-4 text-emerald-600" />
+                <AndroidIcon className="h-4 w-4 text-emerald-400" />
                 הורדת APK
               </a>
             </div>

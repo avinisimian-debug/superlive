@@ -11,22 +11,14 @@ const base = {
   strokeLinejoin: "round" as const,
 };
 
-export function LogoMark({ className, ...props }: IconProps) {
+export function LogoMark({ className, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true" {...props}>
-      <defs>
-        <linearGradient id="slg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#34d399" />
-          <stop offset="1" stopColor="#059669" />
-        </linearGradient>
-      </defs>
-      <rect x="1.5" y="1.5" width="29" height="29" rx="9" fill="url(#slg)" />
-      <path
-        d="M16 24s6.4-6.1 6.4-11A6.4 6.4 0 0 0 16 6.6 6.4 6.4 0 0 0 9.6 13c0 4.9 6.4 11 6.4 11Z"
-        fill="#ffffff"
-      />
-      <circle cx="16" cy="12.9" r="2.55" fill="#059669" />
-    </svg>
+    <img
+      src="/icons/icon-192.png"
+      alt="Zerem Logo"
+      className={`rounded-xl object-cover shadow-sm ${className ?? "h-8 w-8"}`}
+      {...props}
+    />
   );
 }
 

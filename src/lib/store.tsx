@@ -20,8 +20,8 @@ import type {
   UserLocation,
 } from "./types";
 
-const REPORTS_KEY = "superlive.reports.v1";
-const LOCATION_KEY = "superlive.location.v1";
+const REPORTS_KEY = "zerem.reports.v1";
+const LOCATION_KEY = "zerem.location.v1";
 const FAVORITES_KEY = "zerem.favorites.v1";
 const MY_REPORTS_KEY = "zerem.my_reports.v1";
 

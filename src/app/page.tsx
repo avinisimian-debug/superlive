@@ -1,5 +1,5 @@
-import { SuperLiveApp } from "@/components/SuperLiveApp";
+import { ZeremApp } from "@/components/ZeremApp";
 
 export default function Home() {
-  return <SuperLiveApp />;
+  return <ZeremApp />;
 }

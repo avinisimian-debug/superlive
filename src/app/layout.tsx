@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#059669",
+  themeColor: "#080c16",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -49,7 +49,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
-      <body className="antialiased text-slate-900">
+      <body className="antialiased text-white bg-slate-950">
         <AuthProvider>
           <LiveProvider>
             <div className="app-shell">{children}</div>

@@ -33,7 +33,7 @@ const SORT_LABEL: Record<SortMode, string> = {
   byCity: "ממוין לפי עיר ורשת",
 };
 
-export function SuperLiveApp() {
+export function ZeremApp() {
   const { ready, now, location, getLive, submitReport, totalSubmissions, favorites } =
     useLive();
 
@@ -188,22 +188,22 @@ export function SuperLiveApp() {
         ) : currentTab === "profile" ? (
           <PersonalArea onGoToFavorites={() => setCurrentTab("favorites")} />
         ) : currentTab === "favorites" && pool.length === 0 ? (
-          <div className="mx-auto max-w-sm px-6 py-16 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-50 text-amber-500 shadow-sm">
-              <StarIcon filled className="h-8 w-8" />
+          <div className="mx-4 mt-6 rounded-2xl border border-slate-800 bg-slate-900/90 p-8 text-center shadow-lg">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-950/40 text-amber-400 shadow-sm">
+              <StarIcon filled className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-lg font-black text-slate-900">
-              עדיין אין סניפים במועדפים
+            <h3 className="mt-4 text-base font-black text-white">
+              עדיין לא נשמרו סניפים במועדפים
             </h3>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
               לחצו על סימון הכוכב ליד כל סופרמרקט כדי לשמור אותו כאן לגישה מהירה בלחיצה אחת.
             </p>
             <button
               type="button"
               onClick={() => setCurrentTab("feed")}
-              className="mt-5 inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
+              className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-400 px-5 py-2.5 text-xs font-black text-slate-950 shadow-md shadow-cyan-400/20 transition hover:bg-cyan-300 active:scale-95"
             >
-              גלה סופרמרקטים קרובים
+              צפה בסופרמרקטים קרובים
             </button>
           </div>
         ) : (
@@ -234,7 +234,7 @@ export function SuperLiveApp() {
         {currentTab !== "profile" ? (
           <footer className="mt-8 px-6 text-center text-[0.68rem] leading-relaxed text-slate-400">
             <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-500">
-              <RadarIcon className="h-3.5 w-3.5 text-brand-600" />
+              <RadarIcon className="h-3.5 w-3.5 text-cyan-400" />
               זרם · רשת דיווחים קהילתית
             </p>
             <p className="mt-1">
@@ -299,14 +299,14 @@ export function SuperLiveApp() {
 function LoadingState() {
   return (
     <div className="px-4 pt-4" aria-busy="true">
-      <div className="shimmer h-[6.5rem] rounded-3xl" />
+      <div className="h-[6.5rem] rounded-2xl border border-slate-800 bg-slate-900/60 animate-pulse" />
       <div className="mt-3 space-y-3">
         {[0, 1, 2].map((row) => (
-          <div key={row} className="shimmer h-[11.5rem] rounded-2xl" />
+          <div key={row} className="h-[11.5rem] rounded-2xl border border-slate-800 bg-slate-900/60 animate-pulse" />
         ))}
       </div>
-      <p className="mt-6 text-center text-[0.78rem] font-semibold text-slate-400">
-        טוען נתוני לייב…
+      <p className="mt-6 text-center text-xs font-bold text-cyan-400">
+        טוען נתוני טלמטריה בלייב…
       </p>
     </div>
   );

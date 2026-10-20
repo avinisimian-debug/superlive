@@ -6,68 +6,66 @@
     "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", "Helvetica Neue", Arial,
     sans-serif;
 
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
+  --color-brand-cyan: #00e5ff;
+  --color-brand-teal: #06b6d4;
+  --color-brand-blue: #0284c7;
 
-  --color-ink-900: #0b1220;
-  --color-ink-800: #111a2e;
-  --color-ink-700: #1e293b;
+  --color-surface-bg: #080c16;
+  --color-surface-card: #0f172a;
+  --color-surface-card-hover: #131d35;
+  --color-surface-elevated: #18233d;
+  --color-surface-border: #1e293b;
 
-  --color-free: #16a34a;
+  --color-free: #10b981;
   --color-medium: #f59e0b;
   --color-heavy: #ef4444;
 
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -14px rgba(15, 23, 42, 0.16);
-  --shadow-lift: 0 2px 6px rgba(15, 23, 42, 0.05), 0 22px 50px -22px rgba(15, 23, 42, 0.28);
-  --shadow-float: 0 20px 60px -18px rgba(15, 23, 42, 0.34);
-  --shadow-glow: 0 10px 40px -12px rgba(16, 185, 129, 0.5);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-lift: 0 12px 32px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(6, 182, 212, 0.25);
+  --shadow-glow-cyan: 0 0 25px -4px rgba(6, 182, 212, 0.5);
+  --shadow-glow-free: 0 0 20px -4px rgba(16, 185, 129, 0.4);
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
+  background-color: #080c16;
 }
 
 body {
-  background: #eef1f5;
+  background-color: #080c16;
+  color: #f8fafc;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
-/* App shell keeps content at a comfortable mobile width on larger screens. */
+/* App shell keeps content at a comfortable mobile width on larger screens */
 .app-shell {
   width: 100%;
-  max-width: 27rem;
+  max-width: 28rem;
   margin-inline: auto;
   min-height: 100dvh;
-  background: #f7f9fc;
+  background: #0c1222;
   position: relative;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   overflow-x: clip;
 }
 
 @media (min-width: 640px) {
   .app-shell {
     box-shadow:
-      0 0 0 1px rgba(15, 23, 42, 0.05),
-      0 40px 90px -30px rgba(15, 23, 42, 0.28);
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 30px 80px -20px rgba(0, 0, 0, 0.8),
+      0 0 60px -15px rgba(6, 182, 212, 0.12);
   }
 }
 
-/* The marketing landing page must escape the mobile app-shell width. */
 .app-shell:has(> .landing),
 .app-shell:has(> .full-bleed) {
   max-width: none;
@@ -87,7 +85,7 @@ body {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
 }
 
-/* Fade the horizontal scroll edges of the chain strip. */
+/* Fade edges for horizontal scrolling */
 .edge-fade {
   -webkit-mask-image: linear-gradient(
     to left,
@@ -110,14 +108,14 @@ body {
 @keyframes live-ring {
   0% {
     transform: scale(0.7);
-    opacity: 0.85;
+    opacity: 0.9;
   }
   70% {
-    transform: scale(2.4);
+    transform: scale(2.5);
     opacity: 0;
   }
   100% {
-    transform: scale(2.4);
+    transform: scale(2.5);
     opacity: 0;
   }
 }
@@ -133,8 +131,8 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  background: #4ade80;
-  animation: live-ring 1.8s ease-out infinite;
+  background: #00e5ff;
+  animation: live-ring 2s ease-out infinite;
 }
 .live-dot::after {
   content: "";
@@ -142,11 +140,10 @@ body {
   height: 100%;
   width: 100%;
   border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+  background: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.9);
 }
 
-/* Small pulsing ring used on the "open now" status dot. */
 @keyframes soft-ring {
   0% {
     transform: scale(0.6);
@@ -178,62 +175,23 @@ body {
   animation: soft-ring 2s ease-out infinite;
 }
 
-/* GPS button pulse while locating / when actively using GPS. */
 @keyframes gps-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 0.55rem rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0.55rem rgba(6, 182, 212, 0);
   }
 }
 .gps-active {
-  animation: gps-pulse 2.2s ease-out infinite;
-}
-
-@keyframes rise-in {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-.animate-rise {
-  animation: rise-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.animate-fade {
-  animation: fade-in 0.25s ease-out;
-}
-
-@keyframes pop-in {
-  0% {
-    transform: translateY(14px) scale(0.96);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-.animate-pop {
-  animation: pop-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: gps-pulse 2s ease-out infinite;
 }
 
 @keyframes card-in {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.99);
+    transform: translateY(8px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -241,63 +199,11 @@ body {
   }
 }
 .animate-card {
-  animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
-}
-.animate-float {
-  animation: float-slow 6s ease-in-out infinite;
-}
-.animate-float-slow {
-  animation: float-slow 8s ease-in-out infinite;
-}
-
-@keyframes aura-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(-24px, 18px, 0) scale(1.08);
-  }
-}
-.animate-aura {
-  animation: aura-drift 14s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-.shimmer {
-  background: linear-gradient(
-    100deg,
-    rgba(226, 232, 240, 0.65) 20%,
-    rgba(241, 245, 249, 0.95) 42%,
-    rgba(226, 232, 240, 0.65) 64%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
+  animation: card-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise,
-  .animate-fade,
-  .animate-pop,
   .animate-card,
-  .shimmer,
   .live-dot::before,
   .open-dot::before,
   .gps-active {

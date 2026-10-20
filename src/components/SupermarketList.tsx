@@ -11,7 +11,6 @@ export interface ListItem {
   distance: number;
 }
 
-/** Branches revealed up-front, and the size of every subsequent page. */
 const PAGE_SIZE = 20;
 
 export function SupermarketList({
@@ -27,8 +26,6 @@ export function SupermarketList({
 }) {
   const [visible, setVisible] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLLIElement | null>(null);
-  // Loading is "armed" only after a genuine user scroll, so the list can never
-  // run away loading pages on its own while the user sits at the top.
   const armedRef = useRef(false);
 
   useEffect(() => {
@@ -61,15 +58,15 @@ export function SupermarketList({
 
   if (items.length === 0) {
     return (
-      <div className="mx-4 mt-6 rounded-3xl border border-dashed border-slate-300 bg-white/60 px-6 py-12 text-center">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-slate-400">
+      <div className="mx-4 mt-6 rounded-2xl border border-dashed border-slate-800 bg-slate-900/60 px-6 py-12 text-center">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl border border-slate-800 bg-slate-850 text-slate-400">
           <SearchIcon className="h-6 w-6" />
         </div>
-        <p className="mt-3 text-sm font-bold text-slate-700">
-          לא נמצאו סניפים מתאימים
+        <p className="mt-3 text-sm font-bold text-white">
+          לא נמצאו סניפים התואמים את הסינון
         </p>
-        <p className="mt-1 text-[0.78rem] text-slate-500">
-          נסו לשנות את החיפוש, הרשת, העיר או הסינון.
+        <p className="mt-1 text-xs text-slate-400">
+          נסו לשנות את מונח החיפוש, הרשת הנבחרת או מתג העומס.
         </p>
       </div>
     );
@@ -97,24 +94,24 @@ export function SupermarketList({
       </ul>
 
       {!done ? (
-        <div className="mt-4 flex items-center justify-center gap-2 text-[0.72rem] font-semibold text-slate-400">
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-cyan-400">
           <span
-            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-400"
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400"
             aria-hidden="true"
           />
-          טוענים עוד סניפים…
+          טוען סניפים נוספים…
         </div>
       ) : (
         <div
           className="mt-6 flex items-center gap-3 px-6"
           data-testid="end-of-list"
         >
-          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
-          <span className="text-center text-[0.72rem] font-semibold text-slate-400">
-            הגעת לסוף התוצאות · {items.length}{" "}
-            {items.length === 1 ? "סניף" : "סניפים"}
+          <span className="h-px flex-1 bg-slate-800" aria-hidden="true" />
+          <span className="text-center text-[0.72rem] font-bold text-slate-500">
+            הוצגו כל {items.length.toLocaleString("he-IL")}{" "}
+            {items.length === 1 ? "הסניף" : "הסניפים"}
           </span>
-          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+          <span className="h-px flex-1 bg-slate-800" aria-hidden="true" />
         </div>
       )}
     </>
