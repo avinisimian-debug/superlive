@@ -2,75 +2,60 @@
 
 @theme {
   --font-sans:
-    var(--font-heebo), "Heebo", "Assistant", -apple-system, BlinkMacSystemFont,
+    var(--font-heebo), "Heebo", "Rubik", "Assistant", -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", "Helvetica Neue", Arial,
     sans-serif;
 
-  --color-brand-cyan: #00e5ff;
-  --color-brand-teal: #06b6d4;
-  --color-brand-blue: #0284c7;
+  --color-waze-cyan: #00d7ff;
+  --color-waze-blue: #0073ea;
+  --color-waze-dark: #1e293b;
 
-  --color-surface-bg: #080c16;
-  --color-surface-card: #0f172a;
-  --color-surface-card-hover: #131d35;
-  --color-surface-elevated: #18233d;
-  --color-surface-border: #1e293b;
+  --color-free: #16a34a;
+  --color-medium: #ea580c;
+  --color-heavy: #dc2626;
 
-  --color-free: #10b981;
-  --color-medium: #f59e0b;
-  --color-heavy: #ef4444;
-
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --shadow-lift: 0 12px 32px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(6, 182, 212, 0.25);
-  --shadow-glow-cyan: 0 0 25px -4px rgba(6, 182, 212, 0.5);
-  --shadow-glow-free: 0 0 20px -4px rgba(16, 185, 129, 0.4);
+  --shadow-card: 0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-lift: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+  --shadow-waze: 0 4px 14px 0 rgba(0, 115, 234, 0.25);
+  --shadow-nav: 0 -4px 20px rgba(15, 23, 42, 0.06);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
-  background-color: #080c16;
+  background-color: #f1f4f9;
 }
 
 body {
-  background-color: #080c16;
-  color: #f8fafc;
+  background-color: #f1f4f9;
+  color: #1e293b;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
 
-/* App shell keeps content at a comfortable mobile width on larger screens */
+/* App shell: clean Waze-like mobile canvas */
 .app-shell {
   width: 100%;
   max-width: 28rem;
   margin-inline: auto;
   min-height: 100dvh;
-  background: #0c1222;
+  background: #f8fafc;
   position: relative;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
   overflow-x: clip;
 }
 
 @media (min-width: 640px) {
   .app-shell {
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.1),
-      0 30px 80px -20px rgba(0, 0, 0, 0.8),
-      0 0 60px -15px rgba(6, 182, 212, 0.12);
+      0 0 0 1px rgba(15, 23, 42, 0.06),
+      0 25px 60px -15px rgba(15, 23, 42, 0.15);
   }
-}
-
-.app-shell:has(> .landing),
-.app-shell:has(> .full-bleed) {
-  max-width: none;
-  background: transparent;
-  box-shadow: none;
 }
 
 .no-scrollbar {
@@ -85,128 +70,63 @@ body {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem);
 }
 
-/* Fade edges for horizontal scrolling */
-.edge-fade {
-  -webkit-mask-image: linear-gradient(
-    to left,
-    transparent 0,
-    #000 1.25rem,
-    #000 calc(100% - 1.25rem),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to left,
-    transparent 0,
-    #000 1.25rem,
-    #000 calc(100% - 1.25rem),
-    transparent 100%
-  );
-}
-
-/* ---- Animations ---- */
-
-@keyframes live-ring {
+/* Waze-style pulse */
+@keyframes waze-pulse {
   0% {
-    transform: scale(0.7);
+    transform: scale(0.8);
     opacity: 0.9;
   }
   70% {
-    transform: scale(2.5);
+    transform: scale(2.4);
     opacity: 0;
   }
   100% {
-    transform: scale(2.5);
+    transform: scale(2.4);
     opacity: 0;
   }
 }
 
-.live-dot {
+.waze-dot {
   position: relative;
   display: inline-flex;
-  height: 0.6rem;
-  width: 0.6rem;
+  height: 0.55rem;
+  width: 0.55rem;
 }
-.live-dot::before {
+.waze-dot::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: 999px;
-  background: #00e5ff;
-  animation: live-ring 2s ease-out infinite;
+  background: #00d7ff;
+  animation: waze-pulse 1.8s ease-out infinite;
 }
-.live-dot::after {
+.waze-dot::after {
   content: "";
   position: relative;
   height: 100%;
   width: 100%;
   border-radius: 999px;
-  background: #00e5ff;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.9);
+  background: #0073ea;
 }
 
-@keyframes soft-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.7;
-  }
-  80% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-.open-dot {
-  position: relative;
-  display: inline-flex;
-  height: 0.5rem;
-  width: 0.5rem;
-  border-radius: 999px;
-  background: #10b981;
-}
-.open-dot::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 999px;
-  background: #34d399;
-  animation: soft-ring 2s ease-out infinite;
-}
-
-@keyframes gps-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 0.55rem rgba(6, 182, 212, 0);
-  }
-}
-.gps-active {
-  animation: gps-pulse 2s ease-out infinite;
-}
-
-@keyframes card-in {
+/* Card entry animation */
+@keyframes card-rise {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.99);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
-.animate-card {
-  animation: card-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+.animate-waze-card {
+  animation: card-rise 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-card,
-  .live-dot::before,
-  .open-dot::before,
-  .gps-active {
+  .animate-waze-card,
+  .waze-dot::before {
     animation: none !important;
   }
 }

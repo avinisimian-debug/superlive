@@ -12,18 +12,18 @@ const CONGESTION_OPTIONS: {
 }[] = [
   {
     value: "free",
-    dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]",
-    tint: "border-emerald-500/50 bg-emerald-950/40 text-emerald-300 ring-1 ring-emerald-500/30",
+    dot: "bg-emerald-500",
+    tint: "border-emerald-200 bg-emerald-50/70 text-emerald-900 ring-1 ring-emerald-300",
   },
   {
     value: "medium",
-    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]",
-    tint: "border-amber-500/50 bg-amber-950/40 text-amber-300 ring-1 ring-amber-500/30",
+    dot: "bg-amber-500",
+    tint: "border-amber-200 bg-amber-50/70 text-amber-900 ring-1 ring-amber-300",
   },
   {
     value: "heavy",
-    dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]",
-    tint: "border-rose-500/50 bg-rose-950/40 text-rose-300 ring-1 ring-rose-500/30",
+    dot: "bg-rose-500",
+    tint: "border-rose-200 bg-rose-50/70 text-rose-900 ring-1 ring-rose-300",
   },
 ];
 
@@ -34,18 +34,18 @@ const PARKING_OPTIONS: {
 }[] = [
   {
     value: "plenty",
-    dot: "bg-emerald-400",
-    tint: "border-emerald-500/50 bg-emerald-950/40 text-emerald-300 ring-1 ring-emerald-500/30",
+    dot: "bg-emerald-500",
+    tint: "border-emerald-200 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-300",
   },
   {
     value: "partial",
-    dot: "bg-amber-400",
-    tint: "border-amber-500/50 bg-amber-950/40 text-amber-300 ring-1 ring-amber-500/30",
+    dot: "bg-amber-500",
+    tint: "border-amber-200 bg-amber-50 text-amber-900 ring-1 ring-amber-300",
   },
   {
     value: "none",
-    dot: "bg-rose-400",
-    tint: "border-rose-500/50 bg-rose-950/40 text-rose-300 ring-1 ring-rose-500/30",
+    dot: "bg-rose-500",
+    tint: "border-rose-200 bg-rose-50 text-rose-900 ring-1 ring-rose-300",
   },
 ];
 
@@ -77,28 +77,28 @@ export function ReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-label={`דיווח עומס עבור ${branch.name}`}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-3xl border-t border-slate-800 bg-slate-950 text-white pb-[calc(env(safe-area-inset-bottom,0px)+1.2rem)] shadow-2xl"
+        className="w-full max-w-lg rounded-t-[32px] bg-white text-slate-900 pb-[calc(env(safe-area-inset-bottom,0px)+1.2rem)] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-slate-800" />
+        <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-slate-200" />
 
-        <div className="flex items-start justify-between gap-3 px-5 pt-3 border-b border-slate-800/80 pb-3">
+        <div className="flex items-start justify-between gap-3 px-5 pt-3 border-b border-slate-100 pb-3">
           <div className="min-w-0">
-            <p className="flex items-center gap-1 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-cyan-400">
+            <p className="flex items-center gap-1 text-[0.68rem] font-bold uppercase tracking-wider text-sky-600">
               <SparkIcon className="h-3.5 w-3.5" />
-              דיווח עומס בזמן אמת
+              דיווח קהילתי בלייב
             </p>
-            <h2 className="mt-1 truncate text-lg font-black tracking-tight text-white">
+            <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-900">
               {branch.name}
             </h2>
-            <p className="truncate text-xs text-slate-400">
+            <p className="truncate text-xs text-slate-500">
               {branch.address} · {branch.city}
             </p>
           </div>
@@ -106,7 +106,7 @@ export function ReportModal({
             type="button"
             onClick={onClose}
             aria-label="סגירה"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -114,9 +114,9 @@ export function ReportModal({
 
         <div className="max-h-[60vh] overflow-y-auto px-5 py-3 space-y-4 no-scrollbar">
           <fieldset>
-            <legend className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
-              <UsersIcon className="h-4 w-4 text-cyan-400" />
-              מצב התורים בקופות כרגע:
+            <legend className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+              <UsersIcon className="h-4 w-4 text-sky-600" />
+              כמה עמוס בקופות כרגע?
             </legend>
             <div className="mt-2.5 grid gap-2">
               {CONGESTION_OPTIONS.map((option) => {
@@ -127,10 +127,10 @@ export function ReportModal({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setCongestion(option.value)}
-                    className={`flex min-h-[3.8rem] items-center gap-3 rounded-xl border px-4 text-start transition active:scale-[0.98] ${
+                    className={`flex min-h-[3.8rem] items-center gap-3 rounded-2xl border px-4 text-start transition active:scale-98 ${
                       selected
                         ? option.tint
-                        : "border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     <span className={`h-3.5 w-3.5 shrink-0 rounded-full ${option.dot}`} />
@@ -144,7 +144,7 @@ export function ReportModal({
                     </span>
                     <span
                       className={`grid h-6 w-6 place-items-center rounded-full transition ${
-                        selected ? "bg-cyan-400 text-slate-950" : "bg-slate-800 text-transparent"
+                        selected ? "bg-sky-500 text-white" : "bg-slate-100 text-transparent"
                       }`}
                     >
                       <CheckIcon className="h-4 w-4" />
@@ -156,9 +156,9 @@ export function ReportModal({
           </fieldset>
 
           <fieldset>
-            <legend className="flex items-center gap-1.5 text-xs font-bold text-slate-300">
-              <CarIcon className="h-4 w-4 text-cyan-400" />
-              זמינות מקומות חניה:
+            <legend className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+              <CarIcon className="h-4 w-4 text-sky-600" />
+              מה מצב החניה בסניף?
             </legend>
             <div className="mt-2.5 grid grid-cols-3 gap-2">
               {PARKING_OPTIONS.map((option) => {
@@ -169,10 +169,10 @@ export function ReportModal({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setParking(option.value)}
-                    className={`flex min-h-[4rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 text-center text-xs font-bold transition active:scale-[0.97] ${
+                    className={`flex min-h-[4rem] flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 text-center text-xs font-bold transition active:scale-97 ${
                       selected
                         ? option.tint
-                        : "border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                     }`}
                   >
                     <span className={`h-2.5 w-2.5 rounded-full ${option.dot}`} />
@@ -188,14 +188,14 @@ export function ReportModal({
           <button
             type="button"
             onClick={() => onSubmit(congestion, parking)}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 text-sm font-black text-slate-950 shadow-lg shadow-cyan-400/20 transition hover:bg-cyan-300 active:scale-[0.98]"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 text-sm font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-98"
           >
             <CheckIcon className="h-5 w-5" />
-            שלח דיווח לקהילה
+            שליחת דיווח
           </button>
           <p className="mt-2 flex items-center justify-center gap-1 text-center text-[0.68rem] text-slate-400">
-            <SparkIcon className="h-3.5 w-3.5 text-cyan-400" />
-            הדיווח מתעדכן מיידית בפיד לכל משתמשי זרם
+            <SparkIcon className="h-3.5 w-3.5 text-sky-500" />
+            הדיווח מתעדכן מיידית ב-Zerem לטובת כל הנהגים והקונים
           </p>
         </div>
       </div>

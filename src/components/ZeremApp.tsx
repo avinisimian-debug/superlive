@@ -188,22 +188,22 @@ export function ZeremApp() {
         ) : currentTab === "profile" ? (
           <PersonalArea onGoToFavorites={() => setCurrentTab("favorites")} />
         ) : currentTab === "favorites" && pool.length === 0 ? (
-          <div className="mx-4 mt-6 rounded-2xl border border-slate-800 bg-slate-900/90 p-8 text-center shadow-lg">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-950/40 text-amber-400 shadow-sm">
+          <div className="mx-4 mt-6 rounded-3xl border border-slate-200/80 bg-white p-8 text-center shadow-card">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 shadow-xs">
               <StarIcon filled className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-base font-black text-white">
-              עדיין לא נשמרו סניפים במועדפים
+            <h3 className="mt-4 text-base font-black text-slate-900">
+              עדיין אין סניפים במועדפים
             </h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
               לחצו על סימון הכוכב ליד כל סופרמרקט כדי לשמור אותו כאן לגישה מהירה בלחיצה אחת.
             </p>
             <button
               type="button"
               onClick={() => setCurrentTab("feed")}
-              className="mt-5 inline-flex items-center justify-center rounded-xl bg-cyan-400 px-5 py-2.5 text-xs font-black text-slate-950 shadow-md shadow-cyan-400/20 transition hover:bg-cyan-300 active:scale-95"
+              className="mt-5 inline-flex items-center justify-center rounded-2xl bg-sky-500 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-sky-600 active:scale-95"
             >
-              צפה בסופרמרקטים קרובים
+              גלה סופרמרקטים קרובים
             </button>
           </div>
         ) : (
@@ -234,7 +234,7 @@ export function ZeremApp() {
         {currentTab !== "profile" ? (
           <footer className="mt-8 px-6 text-center text-[0.68rem] leading-relaxed text-slate-400">
             <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-500">
-              <RadarIcon className="h-3.5 w-3.5 text-cyan-400" />
+              <RadarIcon className="h-3.5 w-3.5 text-sky-600" />
               זרם · רשת דיווחים קהילתית
             </p>
             <p className="mt-1">
@@ -299,14 +299,14 @@ export function ZeremApp() {
 function LoadingState() {
   return (
     <div className="px-4 pt-4" aria-busy="true">
-      <div className="h-[6.5rem] rounded-2xl border border-slate-800 bg-slate-900/60 animate-pulse" />
+      <div className="h-[6.5rem] rounded-3xl bg-slate-200/70 animate-pulse" />
       <div className="mt-3 space-y-3">
         {[0, 1, 2].map((row) => (
-          <div key={row} className="h-[11.5rem] rounded-2xl border border-slate-800 bg-slate-900/60 animate-pulse" />
+          <div key={row} className="h-[11.5rem] rounded-3xl bg-slate-200/70 animate-pulse" />
         ))}
       </div>
-      <p className="mt-6 text-center text-xs font-bold text-cyan-400">
-        טוען נתוני טלמטריה בלייב…
+      <p className="mt-6 text-center text-xs font-bold text-sky-600">
+        טוען סופרמרקטים ועומסי תנועה…
       </p>
     </div>
   );

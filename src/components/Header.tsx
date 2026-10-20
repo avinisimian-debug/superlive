@@ -9,6 +9,7 @@ import {
   BuildingIcon,
   ChevronDownIcon,
   DownloadIcon,
+  SparkIcon,
 } from "./icons";
 import { AuthButton } from "./AuthButton";
 
@@ -28,21 +29,21 @@ export function Header({
   const { locate, locating, usingGps } = useLive();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
       <div className="px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)]">
-        {/* Brand row */}
+        {/* Brand bar */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <LogoMark className="h-9 w-9 rounded-xl border border-cyan-500/20 shadow-md shadow-cyan-500/10" />
-            <div className="leading-tight">
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black tracking-tight text-white">
+          <div className="flex items-center gap-2.5">
+            <LogoMark className="h-9 w-9 rounded-2xl shadow-xs" />
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[1.25rem] font-black tracking-tight text-slate-900">
                   זרם
                 </span>
-                <span className="live-dot" aria-hidden="true" />
+                <span className="waze-dot" aria-hidden="true" />
               </div>
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.25em] text-cyan-400">
-                Zerem Fintech Live
+              <p className="text-[0.62rem] font-bold text-sky-600 tracking-wider">
+                עומסים וחניה בסופר בלייב
               </p>
             </div>
           </div>
@@ -51,73 +52,82 @@ export function Header({
             <Link
               href="/download"
               aria-label="הורדת האפליקציה"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-700/80 bg-slate-900/90 px-3 py-1 text-[0.72rem] font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-95"
             >
-              <DownloadIcon className="h-3.5 w-3.5 text-cyan-400" />
+              <DownloadIcon className="h-3.5 w-3.5 text-sky-600" />
               הורדה
             </Link>
             <AuthButton />
           </div>
         </div>
 
-        {/* Telemetry row */}
-        <div className="mt-3 flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-900/60 px-3 py-1.5 text-[0.76rem]">
-          <div className="flex items-center gap-1 text-slate-400">
-            <span>סניפים בארץ:</span>
-            <span className="font-extrabold tabular-nums text-white">
-              {totalBranches.toLocaleString("he-IL")}
-            </span>
-          </div>
-          <span className="text-slate-700" aria-hidden="true">|</span>
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-            <span className="text-emerald-400 font-bold tabular-nums">
-              {freeNow.toLocaleString("he-IL")} פנויים כעת
-            </span>
-          </div>
-          <span className="text-slate-700" aria-hidden="true">|</span>
-          <div className="text-slate-400">
-            <span className="font-bold text-slate-200">{cityCount}</span> ערים
-          </div>
-        </div>
-
-        {/* Action pills */}
-        <div className="mt-3 flex items-center gap-2">
+        {/* Waze-style Quick Action Buttons */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {/* Quick Button 1: Location / GPS */}
           <button
             type="button"
             onClick={locate}
             disabled={locating}
-            className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl text-[0.82rem] font-bold transition active:scale-[0.98] disabled:opacity-60 ${
+            className={`flex items-center gap-2.5 rounded-2xl p-2 text-right transition active:scale-98 ${
               usingGps
-                ? "border border-cyan-500/40 bg-cyan-950/40 text-cyan-300 shadow-sm shadow-cyan-500/20 gps-active"
-                : "border border-slate-700/80 bg-slate-900 text-slate-100 hover:border-slate-600 hover:bg-slate-850"
+                ? "bg-sky-50 border border-sky-300 text-sky-900 shadow-xs"
+                : "bg-slate-50 border border-slate-200/80 text-slate-800 hover:bg-slate-100"
             }`}
           >
-            <NavigationIcon
-              className={`h-4 w-4 ${locating ? "animate-spin text-cyan-400" : usingGps ? "text-cyan-400" : "text-slate-400"}`}
-            />
-            {locating ? "מאתר מיקום…" : usingGps ? "מעודכן למיקומך בלייב" : "סופרים קרובים אליי"}
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              usingGps ? "bg-sky-500 text-white shadow-xs" : "bg-sky-100 text-sky-600"
+            }`}>
+              <NavigationIcon className={`h-5 w-5 ${locating ? "animate-spin" : ""}`} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.66rem] font-bold text-slate-500">מיקום נוכחי</p>
+              <p className="truncate text-xs font-black">
+                {locating ? "מאתר…" : usingGps ? "מעודכן למיקומך" : "סופרים קרובים"}
+              </p>
+            </div>
           </button>
 
+          {/* Quick Button 2: City Selector */}
           <button
             type="button"
             onClick={onOpenCity}
-            className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border px-3.5 text-[0.82rem] font-bold transition active:scale-[0.98] ${
+            className={`flex items-center gap-2.5 rounded-2xl p-2 text-right transition active:scale-98 ${
               city !== "all"
-                ? "border-cyan-500/40 bg-cyan-950/50 text-cyan-300"
-                : "border-slate-700/80 bg-slate-900 text-slate-200 hover:border-slate-600"
+                ? "bg-sky-50 border border-sky-300 text-sky-900 shadow-xs"
+                : "bg-slate-50 border border-slate-200/80 text-slate-800 hover:bg-slate-100"
             }`}
           >
-            {city === "all" ? (
-              <BuildingIcon className="h-4 w-4 text-slate-400" />
-            ) : (
-              <MapPinIcon className="h-4 w-4 text-cyan-400" />
-            )}
-            <span className="max-w-24 truncate">
-              {city === "all" ? "כל הארץ" : city}
-            </span>
-            <ChevronDownIcon className="h-3.5 w-3.5 opacity-70" />
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+              city !== "all" ? "bg-sky-500 text-white shadow-xs" : "bg-teal-100 text-teal-600"
+            }`}>
+              {city === "all" ? (
+                <BuildingIcon className="h-5 w-5" />
+              ) : (
+                <MapPinIcon className="h-5 w-5" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[0.66rem] font-bold text-slate-500">אזור פעילות</p>
+              <p className="truncate text-xs font-black">
+                {city === "all" ? "כל הארץ" : city}
+              </p>
+            </div>
+            <ChevronDownIcon className="h-4 w-4 text-slate-400 shrink-0" />
           </button>
+        </div>
+
+        {/* Live Telemetry Pill */}
+        <div className="mt-2.5 flex items-center justify-between rounded-xl bg-slate-100/80 px-3 py-1.5 text-[0.74rem] text-slate-600 font-medium">
+          <span className="tabular-nums font-bold text-slate-900">
+            {totalBranches.toLocaleString("he-IL")} סניפים
+          </span>
+          <span className="text-slate-300">·</span>
+          <span className="flex items-center gap-1 font-bold text-emerald-700">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            {freeNow.toLocaleString("he-IL")} פנויים כעת
+          </span>
+          <span className="text-slate-300">·</span>
+          <span>{cityCount} יישובים</span>
         </div>
       </div>
     </header>

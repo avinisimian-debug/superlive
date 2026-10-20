@@ -58,15 +58,15 @@ export function SupermarketList({
 
   if (items.length === 0) {
     return (
-      <div className="mx-4 mt-6 rounded-2xl border border-dashed border-slate-800 bg-slate-900/60 px-6 py-12 text-center">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl border border-slate-800 bg-slate-850 text-slate-400">
+      <div className="mx-4 mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-xs">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sky-50 text-sky-600">
           <SearchIcon className="h-6 w-6" />
         </div>
-        <p className="mt-3 text-sm font-bold text-white">
-          לא נמצאו סניפים התואמים את הסינון
+        <p className="mt-3 text-sm font-bold text-slate-800">
+          לא נמצאו סניפים מתאימים
         </p>
-        <p className="mt-1 text-xs text-slate-400">
-          נסו לשנות את מונח החיפוש, הרשת הנבחרת או מתג העומס.
+        <p className="mt-1 text-xs text-slate-500">
+          נסו לשנות את מונח החיפוש, הרשת או לבחור עיר אחרת.
         </p>
       </div>
     );
@@ -94,9 +94,9 @@ export function SupermarketList({
       </ul>
 
       {!done ? (
-        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-cyan-400">
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-sky-600">
           <span
-            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-700 border-t-cyan-400"
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-sky-500"
             aria-hidden="true"
           />
           טוען סניפים נוספים…
@@ -106,12 +106,12 @@ export function SupermarketList({
           className="mt-6 flex items-center gap-3 px-6"
           data-testid="end-of-list"
         >
-          <span className="h-px flex-1 bg-slate-800" aria-hidden="true" />
-          <span className="text-center text-[0.72rem] font-bold text-slate-500">
+          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+          <span className="text-center text-[0.72rem] font-bold text-slate-400">
             הוצגו כל {items.length.toLocaleString("he-IL")}{" "}
             {items.length === 1 ? "הסניף" : "הסניפים"}
           </span>
-          <span className="h-px flex-1 bg-slate-800" aria-hidden="true" />
+          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
         </div>
       )}
     </>

@@ -9,25 +9,25 @@ import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon } from "./icons";
 
 const CONGESTION_STYLES: Record<
   Congestion,
-  { pillBg: string; dot: string; text: string; glow: string }
+  { bg: string; dot: string; text: string; badge: string }
 > = {
   free: {
-    pillBg: "bg-emerald-950/50 border-emerald-500/40 text-emerald-300",
-    dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]",
-    text: "text-emerald-300",
-    glow: "shadow-emerald-500/10",
+    bg: "bg-emerald-50",
+    dot: "bg-emerald-500",
+    text: "text-emerald-700",
+    badge: "bg-emerald-100 text-emerald-800",
   },
   medium: {
-    pillBg: "bg-amber-950/50 border-amber-500/40 text-amber-300",
-    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]",
-    text: "text-amber-300",
-    glow: "shadow-amber-500/10",
+    bg: "bg-amber-50",
+    dot: "bg-amber-500",
+    text: "text-amber-800",
+    badge: "bg-amber-100 text-amber-800",
   },
   heavy: {
-    pillBg: "bg-rose-950/50 border-rose-500/40 text-rose-300",
-    dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]",
-    text: "text-rose-300",
-    glow: "shadow-rose-500/10",
+    bg: "bg-rose-50",
+    dot: "bg-rose-500",
+    text: "text-rose-700",
+    badge: "bg-rose-100 text-rose-800",
   },
 };
 
@@ -51,37 +51,38 @@ export function SupermarketCard({
   const favorite = isFavorite(branch.id);
   const congestion = CONGESTION_STYLES[live.congestion];
 
-  // Direct GPS coordinates route in Waze for 100% pinpoint accuracy
-  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&navigate=yes`;
+  // Waze deep link with both exact GPS coordinates and query name so Waze resolves the exact venue name
+  const queryName = encodeURIComponent(`${branch.chain} ${branch.name}`);
+  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&q=${queryName}&navigate=yes`;
 
   return (
-    <article className="animate-card relative rounded-2xl border border-slate-800/90 bg-slate-900/95 p-4 shadow-md transition-all duration-200 hover:border-slate-700 hover:bg-slate-900">
+    <article className="animate-waze-card relative rounded-3xl border border-slate-200/80 bg-white p-4 shadow-card transition-all duration-200 hover:shadow-lift">
       {/* Tap target to open full branch details */}
       <button
         type="button"
         onClick={() => onOpen(branch)}
         aria-label={`הצג פרטים מלאים עבור ${branch.name}`}
         data-testid="card-open"
-        className="absolute inset-0 z-10 rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500/40"
+        className="absolute inset-0 z-10 rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500/40"
       />
 
-      {/* Row 1: Chain, Branch Name, Status, Favorite */}
+      {/* Row 1: Chain Badge, Branch Name, Open Status, Favorite */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[0.72rem] font-bold tracking-wider uppercase text-cyan-400">
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-lg bg-sky-50 px-2 py-0.5 text-[0.7rem] font-bold text-sky-700">
               {branch.chain}
             </span>
-            <span className="rounded-md border border-slate-800 bg-slate-800/60 px-2 py-0.5 text-[0.66rem] font-medium text-slate-300">
+            <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-[0.66rem] font-bold text-slate-500">
               {branch.city}
             </span>
           </div>
-          <h3 className="mt-1 truncate text-[1.08rem] font-black tracking-tight text-white">
+          <h3 className="mt-1.5 truncate text-[1.08rem] font-black tracking-tight text-slate-900">
             {branch.name}
           </h3>
         </div>
 
-        <div className="relative z-20 flex items-center gap-2 shrink-0">
+        <div className="relative z-20 flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={(e) => {
@@ -89,24 +90,24 @@ export function SupermarketCard({
               toggleFavorite(branch.id);
             }}
             aria-label={favorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-800 bg-slate-800/40 text-slate-400 transition hover:border-slate-700 hover:text-amber-400 active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 transition hover:bg-slate-100 active:scale-90"
           >
             <StarIcon
               filled={favorite}
-              className={`h-4 w-4 ${favorite ? "text-amber-400" : "text-slate-500"}`}
+              className={`h-4.5 w-4.5 ${favorite ? "text-amber-400" : "text-slate-300"}`}
             />
           </button>
 
           <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[0.68rem] font-bold ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
               open
-                ? "border-emerald-500/30 bg-emerald-950/40 text-emerald-400"
-                : "border-slate-800 bg-slate-900 text-slate-500"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-slate-100 text-slate-500"
             }`}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                open ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" : "bg-slate-600"
+              className={`h-2 w-2 rounded-full ${
+                open ? "bg-emerald-500" : "bg-slate-400"
               }`}
               aria-hidden="true"
             />
@@ -115,15 +116,15 @@ export function SupermarketCard({
         </div>
       </div>
 
-      {/* Row 2: Live Congestion & Parking Telemetry Pill */}
+      {/* Row 2: Live Congestion & Parking Telemetry */}
       <div className="mt-3">
         <div
-          className={`inline-flex max-w-full items-center gap-2 rounded-xl border px-3 py-1.5 text-[0.78rem] font-semibold ${congestion.pillBg}`}
+          className={`inline-flex max-w-full items-center gap-2 rounded-2xl px-3 py-1.5 text-xs font-bold ${congestion.bg} ${congestion.text}`}
         >
-          <span className={`h-2 w-2 shrink-0 rounded-full ${congestion.dot}`} aria-hidden="true" />
-          <span className="font-extrabold">{CONGESTION_LABEL[live.congestion]}</span>
-          <span className="opacity-80">({CONGESTION_HINT[live.congestion]})</span>
-          <span className="opacity-40" aria-hidden="true">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${congestion.dot}`} aria-hidden="true" />
+          <span>{CONGESTION_LABEL[live.congestion]}</span>
+          <span className="opacity-75">({CONGESTION_HINT[live.congestion]})</span>
+          <span className="opacity-30" aria-hidden="true">
             ·
           </span>
           <CarIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />
@@ -134,36 +135,36 @@ export function SupermarketCard({
       </div>
 
       {/* Row 3: Address & Distance */}
-      <p className="mt-2.5 flex items-center gap-1.5 text-[0.78rem] text-slate-400">
-        <MapPinIcon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+      <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+        <MapPinIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
         <span className="truncate">{branch.address}</span>
         {distance !== null ? (
           <>
-            <span className="text-slate-700" aria-hidden="true">·</span>
-            <span className="shrink-0 font-extrabold tabular-nums text-cyan-300">
+            <span className="text-slate-300" aria-hidden="true">·</span>
+            <span className="shrink-0 font-extrabold tabular-nums text-sky-600">
               {formatDistance(distance)}
             </span>
           </>
         ) : null}
       </p>
 
-      {/* Row 4: Action Bar */}
-      <div className="relative z-20 mt-3 flex items-center gap-2 border-t border-slate-800/80 pt-3">
+      {/* Row 4: Waze-style Action Bar */}
+      <div className="relative z-20 mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
         <a
           href={wazeHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/30 text-[0.8rem] font-extrabold text-cyan-300 shadow-sm transition hover:border-cyan-400 hover:bg-cyan-950/60 active:scale-[0.98]"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-sky-500 text-xs font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-98"
         >
-          <WazeIcon className="h-4 w-4 text-cyan-400" />
-          ניווט Waze ישיר
+          <WazeIcon className="h-4.5 w-4.5" />
+          ניווט ב-Waze
         </a>
         <button
           type="button"
           onClick={() => onReport(branch)}
-          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-850 text-[0.8rem] font-bold text-slate-300 transition hover:border-slate-700 hover:text-white active:scale-[0.98]"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-slate-100 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-98"
         >
-          <UsersIcon className="h-4 w-4 text-slate-400" />
+          <UsersIcon className="h-4 w-4 text-slate-500" />
           דווח עומס
         </button>
       </div>

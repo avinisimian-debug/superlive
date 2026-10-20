@@ -9,10 +9,10 @@ export interface StatsCounts {
   heavy: number;
 }
 
-const ITEMS: { key: Congestion; label: string; dot: string; textColor: string }[] = [
-  { key: "free", label: "פנויים כעת", dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]", textColor: "text-emerald-400" },
-  { key: "medium", label: "עומס בינוני", dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]", textColor: "text-amber-400" },
-  { key: "heavy", label: "עמוסים בקופות", dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]", textColor: "text-rose-400" },
+const ITEMS: { key: Congestion; label: string; dot: string; textColor: string; bg: string }[] = [
+  { key: "free", label: "פנויים כעת", dot: "bg-emerald-500", textColor: "text-emerald-700", bg: "bg-emerald-50" },
+  { key: "medium", label: "עומס בינוני", dot: "bg-amber-500", textColor: "text-amber-800", bg: "bg-amber-50" },
+  { key: "heavy", label: "עמוסים", dot: "bg-rose-500", textColor: "text-rose-700", bg: "bg-rose-50" },
 ];
 
 export function StatsSummary({
@@ -25,14 +25,14 @@ export function StatsSummary({
   return (
     <section
       aria-label="סיכום מצב בזמן אמת"
-      className="mx-4 mt-3 rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 shadow-lg"
+      className="mx-4 mt-3 rounded-3xl border border-slate-200/80 bg-white p-3.5 shadow-card"
     >
       <div className="mb-2 flex items-center justify-between px-1">
-        <p className="flex items-center gap-1.5 text-[0.72rem] font-bold text-slate-400">
-          <CartIcon className="h-3.5 w-3.5 text-cyan-400" />
-          טלמטריה ארצית בלייב
+        <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <CartIcon className="h-4 w-4 text-sky-600" />
+          מצב קופות בזמן אמת
         </p>
-        <span className="text-[0.68rem] font-bold text-cyan-300 tabular-nums">
+        <span className="text-xs font-bold text-slate-500 tabular-nums">
           {total.toLocaleString("he-IL")} סניפים
         </span>
       </div>
@@ -40,15 +40,15 @@ export function StatsSummary({
         {ITEMS.map((item) => (
           <div
             key={item.key}
-            className="flex flex-col items-center rounded-xl border border-slate-800 bg-slate-850 px-2 py-2"
+            className={`flex flex-col items-center rounded-2xl p-2.5 ${item.bg}`}
           >
             <span className="flex items-center gap-1.5">
-              <span className={`h-2 w-2 rounded-full ${item.dot}`} />
+              <span className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />
               <span className={`text-base font-black tabular-nums ${item.textColor}`}>
                 {counts[item.key].toLocaleString("he-IL")}
               </span>
             </span>
-            <span className="mt-0.5 text-center text-[0.66rem] font-bold leading-tight text-slate-400">
+            <span className="mt-0.5 text-center text-[0.66rem] font-bold text-slate-600">
               {item.label}
             </span>
           </div>

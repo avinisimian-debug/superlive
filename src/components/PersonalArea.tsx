@@ -15,31 +15,10 @@ import {
   AndroidIcon,
   AppleIcon,
   UsersIcon,
+  NavigationIcon,
+  MapPinIcon,
   ClockIcon,
 } from "./icons";
-
-const CONGESTION_LABELS: Record<string, string> = {
-  free: "קופות פנויות",
-  medium: "עומס בינוני",
-  heavy: "עומס כבד",
-};
-
-const PARKING_LABELS: Record<string, string> = {
-  plenty: "חניה בשפע",
-  partial: "חניה חלקית",
-  none: "אין חניה",
-};
-
-function formatTimeAgo(at: number): string {
-  const diffMinutes = Math.max(0, Math.round((Date.now() - at) / 60000));
-  if (diffMinutes < 1) return "כרגע";
-  if (diffMinutes === 1) return "לפני דקה";
-  if (diffMinutes < 60) return `לפני ${diffMinutes} דקות`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours === 1) return "לפני שעה";
-  if (diffHours < 24) return `לפני ${diffHours} שעות`;
-  return `לפני ${Math.floor(diffHours / 24)} ימים`;
-}
 
 export function PersonalArea({
   onGoToFavorites,
@@ -61,143 +40,198 @@ export function PersonalArea({
   };
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-28 pt-4">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3">
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-white">
-            אזור אישי
-          </h1>
-          <p className="text-xs text-slate-400">
-            פרופיל משתמש, סופרים שמורים ודיווחי קהילה
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/40 px-2.5 py-1 text-[0.7rem] font-bold text-cyan-300">
-          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-          Zerem Pro
+    <div className="mx-auto max-w-lg px-4 pb-28 pt-2">
+      {/* Top Header like Waze Settings */}
+      <div className="flex items-center justify-between pb-3 pt-2">
+        <h1 className="text-xl font-black text-slate-900">
+          אזור אישי והגדרות
+        </h1>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
+          <span className="h-2 w-2 rounded-full bg-sky-500" />
+          Zerem Live
         </span>
       </div>
 
       {user ? (
-        /* Logged In View */
         <div className="space-y-4">
-          {/* Profile Card */}
-          <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
+          {/* User Profile Card */}
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-card">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/30 bg-gradient-to-tr from-cyan-600 to-blue-600 text-xl font-black text-white shadow-md shadow-cyan-500/20">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-500 text-xl font-black text-white shadow-xs">
                 {(user.name ? user.name[0] : user.email[0]).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="truncate text-base font-extrabold text-white">
+                  <h2 className="truncate text-base font-extrabold text-slate-900">
                     {user.name || "חבר קהילת זרם"}
                   </h2>
                   <span
-                    className={`rounded-full border px-2 py-0.5 text-[0.64rem] font-bold ${
+                    className={`rounded-full px-2 py-0.5 text-[0.66rem] font-bold ${
                       user.role === "admin"
-                        ? "border-amber-500/40 bg-amber-950/60 text-amber-300"
-                        : "border-cyan-500/40 bg-cyan-950/60 text-cyan-300"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-emerald-100 text-emerald-800"
                     }`}
                   >
-                    {user.role === "admin" ? "מנהל מערכת" : "תורם קהילה פעיל"}
+                    {user.role === "admin" ? "מנהל מערכת" : "תורם קהילה"}
                   </span>
                 </div>
-                <p dir="ltr" className="truncate text-xs text-slate-400 text-right mt-0.5">
+                <p dir="ltr" className="truncate text-xs font-medium text-slate-500 text-right mt-0.5">
                   {user.email}
                 </p>
               </div>
             </div>
 
-            {/* Stats Row */}
-            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-slate-800/80 pt-4 text-center">
+            {/* Quick Metrics */}
+            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-center">
               <button
                 type="button"
                 onClick={onGoToFavorites}
-                className="rounded-xl border border-slate-800 bg-slate-850 p-2.5 transition hover:border-slate-700"
+                className="rounded-2xl bg-slate-50 p-2.5 transition hover:bg-slate-100"
               >
-                <div className="flex items-center justify-center gap-1 text-amber-400">
+                <div className="flex items-center justify-center gap-1 text-amber-500">
                   <StarIcon filled className="h-4 w-4" />
                   <span className="text-base font-black tabular-nums">
                     {favorites.length}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
+                <p className="mt-0.5 text-[0.68rem] font-bold text-slate-500">
                   מועדפים
                 </p>
               </button>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-850 p-2.5">
-                <div className="flex items-center justify-center gap-1 text-cyan-400">
+              <div className="rounded-2xl bg-slate-50 p-2.5">
+                <div className="flex items-center justify-center gap-1 text-sky-600">
                   <SparkIcon className="h-4 w-4" />
                   <span className="text-base font-black tabular-nums">
                     {myReports.length}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
+                <p className="mt-0.5 text-[0.68rem] font-bold text-slate-500">
                   דיווחים שלי
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-850 p-2.5">
-                <div className="flex items-center justify-center gap-1 text-emerald-400">
+              <div className="rounded-2xl bg-slate-50 p-2.5">
+                <div className="flex items-center justify-center gap-1 text-emerald-600">
                   <UsersIcon className="h-4 w-4" />
                   <span className="text-base font-black tabular-nums">
                     {totalSubmissions}
                   </span>
                 </div>
-                <p className="mt-1 text-[0.68rem] font-semibold text-slate-400">
-                  סה״כ בקהילה
+                <p className="mt-0.5 text-[0.68rem] font-bold text-slate-500">
+                  דיווחים בארץ
                 </p>
               </div>
             </div>
+          </div>
 
-            {user.role === "admin" ? (
-              <div className="mt-4 border-t border-slate-800/80 pt-3">
-                <Link
-                  href="/admin"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/40 py-2.5 text-xs font-bold text-amber-300 transition hover:bg-amber-950/70"
-                >
-                  <ShieldIcon className="h-4 w-4" />
-                  כניסה לדשבורד מנהל המערכת
-                </Link>
-              </div>
-            ) : null}
-          </section>
+          {/* Waze-Style Menu List */}
+          <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card">
+            {/* Sub-header 1: כללי */}
+            <div className="bg-slate-100/90 px-4 py-2 text-xs font-bold text-slate-600">
+              כללי
+            </div>
+            <div className="divide-y divide-slate-100">
+              {/* Item: Favorites */}
+              <button
+                type="button"
+                onClick={onGoToFavorites}
+                className="flex w-full items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                    <StarIcon filled className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">סופרמרקטים מועדפים</p>
+                    <p className="text-xs text-slate-500">גישה מהירה לסניפים השמורים שלך</p>
+                  </div>
+                </div>
+                <span className="text-slate-400 font-bold">←</span>
+              </button>
 
-          {/* Download & Install App */}
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
-            <h3 className="flex items-center gap-2 text-sm font-black text-white">
-              <DownloadIcon className="h-4 w-4 text-cyan-400" />
-              הורדת אפליקציית Zerem למכשיר
-            </h3>
-            <p className="mt-1 text-xs text-slate-400">
-              התקינו את האפליקציה במסך הבית לגישה מיידית לפני שיוצאים לקניות.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+              {/* Item: Install iPhone */}
               <Link
                 href="/download"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+                className="flex w-full items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
               >
-                <AppleIcon className="h-4 w-4 text-slate-300" />
-                אייפון (iOS)
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                    <AppleIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">התקנה באייפון (iOS)</p>
+                    <p className="text-xs text-slate-500">הוספה בלחיצה אחת למסך הבית</p>
+                  </div>
+                </div>
+                <span className="text-slate-400 font-bold">←</span>
               </Link>
+
+              {/* Item: Download Android APK */}
               <a
                 href="/zerem.apk"
                 download="zerem.apk"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+                className="flex w-full items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
               >
-                <AndroidIcon className="h-4 w-4 text-emerald-400" />
-                אנדרואיד (APK)
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <AndroidIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">הורדת אפליקציה לאנדרואיד (APK)</p>
+                    <p className="text-xs text-slate-500">התקנה ישירה לקובץ Zerem APK</p>
+                  </div>
+                </div>
+                <span className="text-slate-400 font-bold">←</span>
               </a>
             </div>
-          </section>
 
-          {/* Account Actions */}
+            {/* Sub-header 2: העדפות נסיעה וקהילה */}
+            <div className="bg-slate-100/90 px-4 py-2 text-xs font-bold text-slate-600">
+              העדפות נסיעה וקהילה
+            </div>
+            <div className="divide-y divide-slate-100">
+              <div className="flex items-center justify-between p-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <NavigationIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">ניווט ישיר ב-Waze</p>
+                    <p className="text-xs text-slate-500">פתיחה מיידית של מסלול מדויק לקופות ולחניה</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[0.66rem] font-bold text-emerald-800">
+                  מופעל
+                </span>
+              </div>
+
+              {user.role === "admin" ? (
+                <Link
+                  href="/admin"
+                  className="flex w-full items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                      <ShieldIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">דשבורד מנהל מערכת</p>
+                      <p className="text-xs text-slate-500">אנליטיקה, סניפים ומשתמשים</p>
+                    </div>
+                  </div>
+                  <span className="text-slate-400 font-bold">←</span>
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Logout Button */}
           <button
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/30 py-3 text-xs font-bold text-rose-300 transition hover:bg-rose-950/60 active:scale-98 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50/70 py-3 text-xs font-bold text-red-600 transition hover:bg-red-100 active:scale-98 disabled:opacity-50"
           >
             <LogoutIcon className="h-4 w-4" />
             {loggingOut ? "מתנתק…" : "התנתקות מהחשבון"}
@@ -206,42 +240,54 @@ export function PersonalArea({
       ) : (
         /* Logged Out View */
         <div className="space-y-4">
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card">
             <LoginForm
-              title="התחברו כדי לשמור מועדפים ולדווח"
+              title="התחברו ל-Zerem"
               onSuccess={() => {
                 showToast("ברוך הבא! התחברת בהצלחה ל-Zerem");
               }}
             />
-          </section>
+          </div>
 
           {/* App download section */}
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 shadow-lg">
-            <h3 className="flex items-center gap-2 text-sm font-black text-white">
-              <DownloadIcon className="h-4 w-4 text-cyan-400" />
+          <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card">
+            <div className="bg-slate-100/90 px-4 py-2 text-xs font-bold text-slate-600">
               הורדת אפליקציית Zerem
-            </h3>
-            <p className="mt-1 text-xs text-slate-400">
-              קבלו גישה ישירה למפת העומסים המלאה של ישראל, סופרים פנויים וניווט Waze ישיר.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            </div>
+            <div className="divide-y divide-slate-100">
               <Link
                 href="/download"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+                className="flex items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
               >
-                <AppleIcon className="h-4 w-4 text-slate-300" />
-                התקנה לאייפון
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                    <AppleIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">התקנה לאייפון (iOS)</p>
+                    <p className="text-xs text-slate-500">הורדה ישירה למסך הבית ללא חנות</p>
+                  </div>
+                </div>
+                <span className="text-slate-400 font-bold">←</span>
               </Link>
               <a
                 href="/zerem.apk"
                 download="zerem.apk"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-850 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-500/40 hover:text-cyan-300"
+                className="flex items-center justify-between p-3.5 text-right transition hover:bg-slate-50"
               >
-                <AndroidIcon className="h-4 w-4 text-emerald-400" />
-                הורדת APK
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <AndroidIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">הורדת קובץ לאנדרואיד (APK)</p>
+                    <p className="text-xs text-slate-500">התקנה מהירה למכשירי אנדרואיד</p>
+                  </div>
+                </div>
+                <span className="text-slate-400 font-bold">←</span>
               </a>
             </div>
-          </section>
+          </div>
         </div>
       )}
     </div>
