@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Branch, LiveState } from "@/lib/types";
+import type { BranchRouteInfo } from "@/lib/routing";
 import { SupermarketCard } from "./SupermarketCard";
 import { SearchIcon } from "./icons";
 
@@ -9,6 +10,7 @@ export interface ListItem {
   branch: Branch;
   live: LiveState;
   distance: number;
+  routeInfo?: BranchRouteInfo;
 }
 
 const PAGE_SIZE = 20;
@@ -84,6 +86,7 @@ export function SupermarketList({
               branch={item.branch}
               live={item.live}
               distance={item.distance}
+              routeInfo={item.routeInfo}
               now={now}
               onReport={onReport}
               onOpen={onOpen}

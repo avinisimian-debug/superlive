@@ -170,3 +170,58 @@ console.log(`========================================\n`);
 if (failed > 0) {
   process.exit(1);
 }
+
+// ================= TEST GROUP 5: NAVIGATION & GPS ACCURACY =================
+import { isValidCoordinates, getWazeNavigationUrl } from "../src/lib/navigation";
+
+console.log("\n--- 5. Navigation & GPS Accuracy Tests ---");
+
+it("validates Israeli geographic boundaries correctly", () => {
+  assert.strictEqual(isValidCoordinates(32.0853, 34.7818), true, "Tel Aviv should be valid");
+  assert.strictEqual(isValidCoordinates(31.7683, 35.2137), true, "Jerusalem should be valid");
+  assert.strictEqual(isValidCoordinates(29.5581, 34.9482), true, "Eilat should be valid");
+  assert.strictEqual(isValidCoordinates(33.2073, 35.5694), true, "Kiryat Shmona should be valid");
+
+  // Out of bounds
+  assert.strictEqual(isValidCoordinates(40.7128, -74.0060), false, "New York should be invalid");
+  assert.strictEqual(isValidCoordinates(0, 0), false, "Null island should be invalid");
+  assert.strictEqual(isValidCoordinates(NaN, 34.78), false, "NaN should be invalid");
+});
+
+it("generates exact coordinates Waze URL without search text override", () => {
+  const branch = {
+    id: "b-0001",
+    name: "סופרמרקט",
+    chain: "שופרסל שלי" as const,
+    city: "חיפה",
+    address: "העצמאות 40",
+    lat: 32.8191,
+    lng: 34.9983,
+    scheduleIdx: 0,
+    hours: "08:00–21:00",
+    size: "standard" as const,
+  };
+
+  const url = getWazeNavigationUrl(branch);
+  assert.strictEqual(url, "https://www.waze.com/ul?ll=32.8191%2C34.9983&navigate=yes");
+  assert.strictEqual(url.includes("&q="), false, "URL must NOT include &q= parameter which overrides coordinates in Waze");
+});
+
+it("respects explicit wazeQuery overrides when provided", () => {
+  const branchWithOverride = {
+    id: "b-0509",
+    name: "ישפרו סנטר",
+    chain: "רמי לוי" as const,
+    city: "מודיעין",
+    address: "המלאכות 1",
+    lat: 31.8900,
+    lng: 34.9600,
+    scheduleIdx: 0,
+    hours: "08:00–21:00",
+    size: "hyper" as const,
+    wazeQuery: "רמי לוי ישפרו סנטר מודיעין",
+  };
+
+  const url = getWazeNavigationUrl(branchWithOverride);
+  assert.match(url, /q=%D7%A8%D7%9E%D7%99%20%D7%9C%D7%95%D7%99/, "Should use explicit wazeQuery override");
+});

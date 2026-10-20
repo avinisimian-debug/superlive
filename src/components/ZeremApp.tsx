@@ -1,6 +1,7 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState, useEffect } from "react";
+import { fetchRoadDistances, type BranchRouteInfo } from "@/lib/routing";
 import {
   BRANCHES,
   CITIES,
@@ -47,6 +48,7 @@ export function ZeremApp() {
   const [cityOpen, setCityOpen] = useState(false);
   const [reporting, setReporting] = useState<Branch | null>(null);
   const [detail, setDetail] = useState<Branch | null>(null);
+  const [routesMap, setRoutesMap] = useState<Record<string, BranchRouteInfo>>({});
 
   const deferredSearch = useDeferredValue(search);
   const date = useMemo(() => new Date(now), [now]);
@@ -101,15 +103,41 @@ export function ZeremApp() {
     return acc;
   }, [base]);
 
+  useEffect(() => {
+    if (!ready || base.length === 0) return;
+    const topCandidates = [...base]
+      .sort((a, b) => distanceKm(location.lat, location.lng, a.lat, a.lng) - distanceKm(location.lat, location.lng, b.lat, b.lng))
+      .slice(0, 25);
+
+    let active = true;
+    void fetchRoadDistances(location, topCandidates).then((routes) => {
+      if (active && routes && Object.keys(routes).length > 0) {
+        setRoutesMap((prev) => ({ ...prev, ...routes }));
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [ready, location.lat, location.lng, base]);
+
+
   const items = useMemo<ListItem[]>(() => {
     const filtered =
       chain === "all" ? base : base.filter((branch) => branch.chain === chain);
 
-    const mapped: ListItem[] = filtered.map((branch) => ({
-      branch,
-      live: liveById.get(branch.id) as LiveState,
-      distance: distanceKm(location.lat, location.lng, branch.lat, branch.lng),
-    }));
+    const mapped: ListItem[] = filtered.map((branch) => {
+      const routeInfo = routesMap[branch.id];
+      const distance = routeInfo?.isRealRoad
+        ? routeInfo.drivingDistanceKm
+        : distanceKm(location.lat, location.lng, branch.lat, branch.lng);
+      return {
+        branch,
+        live: liveById.get(branch.id) as LiveState,
+        distance,
+        routeInfo,
+      };
+    });
 
     mapped.sort((a, b) => {
       if (sort === "nearest") return a.distance - b.distance;
@@ -130,7 +158,7 @@ export function ZeremApp() {
     });
 
     return mapped;
-  }, [base, chain, liveById, location, sort]);
+  }, [base, chain, liveById, location, sort, routesMap]);
 
   const counts = useMemo(() => {
     let free = 0;

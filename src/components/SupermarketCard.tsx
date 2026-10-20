@@ -7,6 +7,7 @@ import { isOpenAt, openStatus } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
 import { getChainMeta } from "@/lib/chains";
 import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon, ClockIcon } from "./icons";
+import { getWazeNavigationUrl } from "@/lib/navigation";
 
 const CONGESTION_CONFIG: Record<
   Congestion,
@@ -53,6 +54,7 @@ export function SupermarketCard({
   branch,
   live,
   distance,
+  routeInfo,
   now,
   onReport,
   onOpen,
@@ -60,6 +62,13 @@ export function SupermarketCard({
   branch: Branch;
   live: LiveState;
   distance: number | null;
+  routeInfo?: {
+    drivingDistanceKm: number;
+    drivingMinutes: number;
+    formattedDistance: string;
+    formattedDuration: string;
+    isRealRoad: boolean;
+  };
   now: number;
   onReport: (branch: Branch) => void;
   onOpen: (branch: Branch) => void;
@@ -71,9 +80,8 @@ export function SupermarketCard({
   const congestion = CONGESTION_CONFIG[live.congestion];
   const chainMeta = getChainMeta(branch.chain);
 
-  // Waze deep link with venue name for exact destination match
-  const queryName = encodeURIComponent(`${branch.chain} ${branch.name}`);
-  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&q=${queryName}&navigate=yes`;
+  // Exact physical Waze navigation URL
+  const wazeHref = getWazeNavigationUrl(branch);
 
   return (
     <article className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:border-slate-300">

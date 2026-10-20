@@ -1,43 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Clean Deep Navy Background -->
+  <rect width="512" height="512" rx="112" fill="#090d16"/>
+  <rect width="510" height="510" x="1" y="1" rx="111" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Subtle Precision Geometric Grid Ring -->
+  <circle cx="256" cy="256" r="170" stroke="#00e5ff" stroke-opacity="0.12" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- Core Precision Geometric Z Symbol -->
+  <!-- Top Horizontal Bar -->
+  <path d="M148 160 C148 153.373 153.373 148 160 148 L352 148 C360.837 148 368 155.163 368 164 L368 184 C368 192.837 360.837 200 352 200 L228 200 L356.5 316.5 C363.8 323.1 368 332.5 368 342.3 L368 352 C368 360.837 360.837 368 352 368 L160 368 C153.373 368 148 362.627 148 356 L148 336 C148 327.163 155.163 320 164 320 L288 320 L159.5 203.5 C152.2 196.9 148 187.5 148 177.7 Z" fill="url(#zGradient)"/>
+
+  <!-- Live Pulse Beacon -->
+  <circle cx="368" cy="148" r="14" fill="#00e5ff"/>
+  <circle cx="368" cy="148" r="6" fill="#ffffff"/>
+
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#090d16"/>
-      <stop offset="50%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#1e1b4b"/>
+    <linearGradient id="zGradient" x1="148" y1="148" x2="368" y2="368" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#00a8ff"/>
+      <stop offset="100%" stop-color="#2563eb"/>
     </linearGradient>
-    <linearGradient id="cyanPulse" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="50%" stop-color="#00d7ff"/>
-      <stop offset="100%" stop-color="#0284c7"/>
-    </linearGradient>
-    <linearGradient id="streamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="50%" stop-color="#06b6d4"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="16" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
   </defs>
-
-  <!-- Squircle Base Canvas -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
-  <rect width="510" height="510" x="1" y="1" rx="127" stroke="#334155" stroke-width="2" fill="none"/>
-
-  <!-- Glowing Radar Concentric Stream Rings -->
-  <circle cx="256" cy="256" r="190" stroke="#00d7ff" stroke-opacity="0.08" stroke-width="2" fill="none"/>
-  <circle cx="256" cy="256" r="140" stroke="#00d7ff" stroke-opacity="0.12" stroke-width="2" fill="none"/>
-  <circle cx="256" cy="256" r="90" stroke="#00d7ff" stroke-opacity="0.18" stroke-width="2" fill="none"/>
-
-  <!-- Core Dynamic Z-Stream Glyph -->
-  <path d="M140 160 C140 148 150 140 162 140 L350 140 C364 140 374 154 368 167 L226 332 L350 332 C362 332 372 342 372 354 C372 366 362 376 350 376 L162 376 C148 376 138 362 144 349 L286 184 L162 184 C150 184 140 174 140 160 Z" fill="url(#streamGrad)" filter="url(#glow)"/>
-
-  <!-- Live Pulse Core Dot -->
-  <circle cx="368" cy="144" r="18" fill="#00d7ff" filter="url(#glow)"/>
-  <circle cx="368" cy="144" r="8" fill="#ffffff"/>
-  
-  <!-- Shopping Cart Wheel Accents -->
-  <circle cx="180" cy="376" r="14" fill="#00d7ff"/>
-  <circle cx="332" cy="376" r="14" fill="#10b981"/>
 </svg>

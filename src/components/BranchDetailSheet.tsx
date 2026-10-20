@@ -6,6 +6,7 @@ import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loa
 import { minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
+import { getWazeNavigationUrl } from "@/lib/navigation";
 import { getChainMeta } from "@/lib/chains";
 import {
   CarIcon,
@@ -88,8 +89,7 @@ export function BranchDetailSheet({
     return [...bars].sort((a, b) => a.load - b.load)[0];
   }, [bars]);
 
-  const queryName = encodeURIComponent(`${branch.chain} ${branch.name}`);
-  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&q=${queryName}&navigate=yes`;
+  const wazeHref = getWazeNavigationUrl(branch);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
