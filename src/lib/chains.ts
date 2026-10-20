@@ -1,0 +1,217 @@
+import type { Chain } from "./types";
+
+export interface ChainMeta {
+  bg: string;
+  text: string;
+  badgeBg: string;
+  badgeText: string;
+  accent: string;
+  shortName: string;
+  logoLetter: string;
+}
+
+export const CHAIN_META: Record<string, ChainMeta> = {
+  "שופרסל": {
+    bg: "bg-[#e30613]",
+    text: "text-white",
+    badgeBg: "bg-red-50 border-red-200",
+    badgeText: "text-[#e30613]",
+    accent: "#e30613",
+    shortName: "שופרסל",
+    logoLetter: "ש",
+  },
+  "שופרסל שלי": {
+    bg: "bg-[#e30613]",
+    text: "text-white",
+    badgeBg: "bg-red-50 border-red-200",
+    badgeText: "text-[#e30613]",
+    accent: "#e30613",
+    shortName: "שופרסל שלי",
+    logoLetter: "ש",
+  },
+  "שופרסל דיל": {
+    bg: "bg-[#c40510]",
+    text: "text-white",
+    badgeBg: "bg-red-50 border-red-200",
+    badgeText: "text-[#c40510]",
+    accent: "#c40510",
+    shortName: "שופרסל דיל",
+    logoLetter: "ש",
+  },
+  "שופרסל אקספרס": {
+    bg: "bg-[#e30613]",
+    text: "text-white",
+    badgeBg: "bg-red-50 border-red-200",
+    badgeText: "text-[#e30613]",
+    accent: "#e30613",
+    shortName: "אקספרס",
+    logoLetter: "ש",
+  },
+  "יש (שופרסל)": {
+    bg: "bg-[#007a3d]",
+    text: "text-white",
+    badgeBg: "bg-emerald-50 border-emerald-200",
+    badgeText: "text-emerald-800",
+    accent: "#007a3d",
+    shortName: "יש חסד",
+    logoLetter: "י",
+  },
+  "רמי לוי": {
+    bg: "bg-[#003b95]",
+    text: "text-white",
+    badgeBg: "bg-blue-50 border-blue-200",
+    badgeText: "text-[#003b95]",
+    accent: "#003b95",
+    shortName: "רמי לוי",
+    logoLetter: "ר",
+  },
+  "קרפור": {
+    bg: "bg-[#004e9a]",
+    text: "text-white",
+    badgeBg: "bg-sky-50 border-sky-200",
+    badgeText: "text-[#004e9a]",
+    accent: "#004e9a",
+    shortName: "Carrefour",
+    logoLetter: "C",
+  },
+  "יוחננוף": {
+    bg: "bg-[#007a3d]",
+    text: "text-white",
+    badgeBg: "bg-emerald-50 border-emerald-200",
+    badgeText: "text-[#007a3d]",
+    accent: "#007a3d",
+    shortName: "יוחננוף",
+    logoLetter: "י",
+  },
+  "אושר עד": {
+    bg: "bg-[#002f6c]",
+    text: "text-amber-400",
+    badgeBg: "bg-slate-900 border-slate-800",
+    badgeText: "text-amber-400",
+    accent: "#002f6c",
+    shortName: "אושר עד",
+    logoLetter: "א",
+  },
+  "ויקטורי": {
+    bg: "bg-[#e5007d]",
+    text: "text-white",
+    badgeBg: "bg-pink-50 border-pink-200",
+    badgeText: "text-[#e5007d]",
+    accent: "#e5007d",
+    shortName: "ויקטורי",
+    logoLetter: "V",
+  },
+  "חצי חינם": {
+    bg: "bg-[#0a4b9c]",
+    text: "text-yellow-300",
+    badgeBg: "bg-blue-50 border-blue-200",
+    badgeText: "text-[#0a4b9c]",
+    accent: "#0a4b9c",
+    shortName: "חצי חינם",
+    logoLetter: "½",
+  },
+  "טיב טעם": {
+    bg: "bg-[#800020]",
+    text: "text-white",
+    badgeBg: "bg-rose-50 border-rose-200",
+    badgeText: "text-[#800020]",
+    accent: "#800020",
+    shortName: "טיב טעם",
+    logoLetter: "ט",
+  },
+  "am:pm": {
+    bg: "bg-black",
+    text: "text-yellow-400",
+    badgeBg: "bg-black border-zinc-800",
+    badgeText: "text-yellow-400",
+    accent: "#000000",
+    shortName: "am:pm",
+    logoLetter: "am",
+  },
+  "קשת טעמים": {
+    bg: "bg-[#b91c1c]",
+    text: "text-white",
+    badgeBg: "bg-red-50 border-red-200",
+    badgeText: "text-[#b91c1c]",
+    accent: "#b91c1c",
+    shortName: "קשת טעמים",
+    logoLetter: "ק",
+  },
+  "מחסני השוק": {
+    bg: "bg-[#15803d]",
+    text: "text-yellow-300",
+    badgeBg: "bg-green-50 border-green-200",
+    badgeText: "text-[#15803d]",
+    accent: "#15803d",
+    shortName: "מחסני השוק",
+    logoLetter: "מ",
+  },
+  "פרשמרקט": {
+    bg: "bg-[#059669]",
+    text: "text-white",
+    badgeBg: "bg-emerald-50 border-emerald-200",
+    badgeText: "text-[#059669]",
+    accent: "#059669",
+    shortName: "פרשמרקט",
+    logoLetter: "פ",
+  },
+  "מכולת שכונתית": {
+    bg: "bg-[#d97706]",
+    text: "text-white",
+    badgeBg: "bg-amber-50 border-amber-200",
+    badgeText: "text-[#d97706]",
+    accent: "#d97706",
+    shortName: "מכולת",
+    logoLetter: "🏠",
+  },
+  "סופרמרקט שכונתי": {
+    bg: "bg-[#475569]",
+    text: "text-white",
+    badgeBg: "bg-slate-100 border-slate-200",
+    badgeText: "text-[#475569]",
+    accent: "#475569",
+    shortName: "סופר שכונתי",
+    logoLetter: "🛒",
+  },
+  "סיטי מרקט": {
+    bg: "bg-[#0284c7]",
+    text: "text-white",
+    badgeBg: "bg-sky-50 border-sky-200",
+    badgeText: "text-[#0284c7]",
+    accent: "#0284c7",
+    shortName: "סיטי מרקט",
+    logoLetter: "C",
+  },
+  "נתיב החסד": {
+    bg: "bg-[#1e3a8a]",
+    text: "text-white",
+    badgeBg: "bg-blue-50 border-blue-200",
+    badgeText: "text-[#1e3a8a]",
+    accent: "#1e3a8a",
+    shortName: "נתיב החסד",
+    logoLetter: "נ",
+  },
+  "זול ובגדול": {
+    bg: "bg-[#b45309]",
+    text: "text-white",
+    badgeBg: "bg-amber-50 border-amber-200",
+    badgeText: "text-[#b45309]",
+    accent: "#b45309",
+    shortName: "זול ובגדול",
+    logoLetter: "ז",
+  },
+};
+
+export function getChainMeta(chain: string): ChainMeta {
+  return (
+    CHAIN_META[chain] ?? {
+      bg: "bg-slate-700",
+      text: "text-white",
+      badgeBg: "bg-slate-100 border-slate-200",
+      badgeText: "text-slate-800",
+      accent: "#334155",
+      shortName: chain,
+      logoLetter: chain[0] ?? "ס",
+    }
+  );
+}

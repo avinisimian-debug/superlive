@@ -1,33 +1,51 @@
 "use client";
 
 import type { Branch, Congestion, LiveState } from "@/lib/types";
-import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_SHORT } from "@/lib/live";
+import { CONGESTION_HINT, PARKING_SHORT } from "@/lib/live";
 import { formatDistance } from "@/lib/geo";
-import { isOpenAt } from "@/lib/schedules";
+import { isOpenAt, openStatus } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
-import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon } from "./icons";
+import { getChainMeta } from "@/lib/chains";
+import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon, ClockIcon } from "./icons";
 
-const CONGESTION_STYLES: Record<
+const CONGESTION_CONFIG: Record<
   Congestion,
-  { bg: string; dot: string; text: string; badge: string }
+  {
+    bg: string;
+    border: string;
+    dot: string;
+    text: string;
+    label: string;
+    wait: string;
+    barColor: string;
+  }
 > = {
   free: {
-    bg: "bg-emerald-50",
+    bg: "bg-emerald-50/80",
+    border: "border-emerald-200",
     dot: "bg-emerald-500",
-    text: "text-emerald-700",
-    badge: "bg-emerald-100 text-emerald-800",
+    text: "text-emerald-800",
+    label: "פנוי עכשיו",
+    wait: "ללא תור בקופות",
+    barColor: "bg-emerald-500",
   },
   medium: {
-    bg: "bg-amber-50",
+    bg: "bg-amber-50/80",
+    border: "border-amber-200",
     dot: "bg-amber-500",
-    text: "text-amber-800",
-    badge: "bg-amber-100 text-amber-800",
+    text: "text-amber-900",
+    label: "עומס סביר",
+    wait: "תור של 3–5 דק׳",
+    barColor: "bg-amber-500",
   },
   heavy: {
-    bg: "bg-rose-50",
+    bg: "bg-rose-50/80",
+    border: "border-rose-200",
     dot: "bg-rose-500",
-    text: "text-rose-700",
-    badge: "bg-rose-100 text-rose-800",
+    text: "text-rose-900",
+    label: "עמוס בקופות",
+    wait: "תורים ארוכים (15+ דק׳)",
+    barColor: "bg-rose-500",
   },
 };
 
@@ -47,126 +65,147 @@ export function SupermarketCard({
   onOpen: (branch: Branch) => void;
 }) {
   const { isFavorite, toggleFavorite } = useLive();
-  const open = isOpenAt(branch.scheduleIdx, new Date(now));
+  const date = new Date(now);
+  const status = openStatus(branch.scheduleIdx, date);
   const favorite = isFavorite(branch.id);
-  const congestion = CONGESTION_STYLES[live.congestion];
+  const congestion = CONGESTION_CONFIG[live.congestion];
+  const chainMeta = getChainMeta(branch.chain);
 
-  // Waze deep link with both exact GPS coordinates and query name so Waze resolves the exact venue name
+  // Waze deep link with venue name for exact destination match
   const queryName = encodeURIComponent(`${branch.chain} ${branch.name}`);
   const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&q=${queryName}&navigate=yes`;
 
   return (
-    <article className="animate-waze-card relative rounded-3xl border border-slate-200/80 bg-white p-4 shadow-card transition-all duration-200 hover:shadow-lift">
-      {/* Tap target to open full branch details */}
+    <article className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:border-slate-300">
+      {/* Side status color bar indicating congestion at a glance */}
+      <div
+        className={`absolute top-0 right-0 bottom-0 w-1.5 ${congestion.barColor}`}
+        aria-hidden="true"
+      />
+
+      {/* Tap target to open branch details */}
       <button
         type="button"
         onClick={() => onOpen(branch)}
-        aria-label={`הצג פרטים מלאים עבור ${branch.name}`}
-        data-testid="card-open"
-        className="absolute inset-0 z-10 rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500/40"
+        aria-label={`פרטים מלאים עבור ${branch.name}`}
+        className="absolute inset-0 z-10 rounded-3xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
       />
 
-      {/* Row 1: Chain Badge, Branch Name, Open Status, Favorite */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-lg bg-sky-50 px-2 py-0.5 text-[0.7rem] font-bold text-sky-700">
-              {branch.chain}
-            </span>
-            <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-[0.66rem] font-bold text-slate-500">
-              {branch.city}
-            </span>
+      {/* Header: Chain Logo Badge + Branch Name + Favorite Button */}
+      <div className="flex items-start justify-between gap-3 pr-2">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          {/* Authentic Chain Mini Logo Box */}
+          <div
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-2xs font-black text-sm ${chainMeta.bg} ${chainMeta.text}`}
+          >
+            {chainMeta.logoLetter}
           </div>
-          <h3 className="mt-1.5 truncate text-[1.08rem] font-black tracking-tight text-slate-900">
-            {branch.name}
-          </h3>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className={`rounded-md border px-2 py-0.5 text-[0.66rem] font-bold ${chainMeta.badgeBg} ${chainMeta.badgeText}`}>
+                {chainMeta.shortName}
+              </span>
+              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[0.66rem] font-bold text-slate-600">
+                {branch.city}
+              </span>
+              {branch.isCustom && (
+                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[0.62rem] font-black text-amber-800">
+                  חדש במפה
+                </span>
+              )}
+            </div>
+
+            <h3 className="mt-1 text-sm sm:text-base font-black text-slate-900 tracking-tight truncate">
+              {branch.name}
+            </h3>
+            <p className="text-xs text-slate-500 truncate mt-0.5">
+              {branch.address}
+            </p>
+          </div>
         </div>
 
-        <div className="relative z-20 flex items-center gap-1.5 shrink-0">
+        {/* Favorite Star Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(branch.id);
+          }}
+          aria-label={favorite ? "הסר ממועדפים" : "שמור במועדפים"}
+          className="relative z-20 grid h-8 w-8 place-items-center rounded-full text-slate-300 transition hover:bg-slate-100 hover:text-amber-400 active:scale-90"
+        >
+          <StarIcon
+            filled={favorite}
+            className={`h-5 w-5 ${favorite ? "text-amber-400" : ""}`}
+          />
+        </button>
+      </div>
+
+      {/* Live Congestion & Parking Metric Strip */}
+      <div className="mt-3.5 pr-2 grid grid-cols-2 gap-2">
+        {/* Congestion Box */}
+        <div className={`rounded-2xl border p-2.5 ${congestion.bg} ${congestion.border}`}>
+          <div className="flex items-center gap-1.5">
+            <span className={`h-2.5 w-2.5 rounded-full ${congestion.dot} animate-pulse shrink-0`} />
+            <span className={`text-xs font-black ${congestion.text}`}>
+              {congestion.label}
+            </span>
+          </div>
+          <p className="text-[0.68rem] font-semibold text-slate-600 mt-0.5">
+            {congestion.wait}
+          </p>
+        </div>
+
+        {/* Parking & Hours Box */}
+        <div className="rounded-2xl border border-slate-100 bg-slate-50/90 p-2.5">
+          <div className="flex items-center gap-1 text-xs font-bold text-slate-800">
+            <CarIcon className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            <span>חניה: {PARKING_SHORT[live.parking]}</span>
+          </div>
+          <p className={`text-[0.68rem] font-bold mt-0.5 ${status.open ? "text-emerald-700" : "text-rose-700"}`}>
+            {status.text}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer Strip: Distance + Waze Button */}
+      <div className="mt-3 pr-2 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          {distance !== null ? (
+            <span className="flex items-center gap-1 font-bold text-slate-700">
+              <MapPinIcon className="h-3.5 w-3.5 text-sky-600" />
+              {formatDistance(distance)}
+            </span>
+          ) : (
+            <span>{branch.hours || "סניף פעיל"}</span>
+          )}
+        </div>
+
+        <div className="relative z-20 flex items-center gap-1.5">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              toggleFavorite(branch.id);
+              onReport(branch);
             }}
-            aria-label={favorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 transition hover:bg-slate-100 active:scale-90"
+            className="rounded-xl bg-slate-100 px-2.5 py-1.5 text-[0.7rem] font-bold text-slate-700 transition hover:bg-slate-200 active:scale-95"
           >
-            <StarIcon
-              filled={favorite}
-              className={`h-4.5 w-4.5 ${favorite ? "text-amber-400" : "text-slate-300"}`}
-            />
+            <UsersIcon className="h-3.5 w-3.5 inline ml-1 text-slate-500" />
+            דווח
           </button>
 
-          <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
-              open
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-slate-100 text-slate-500"
-            }`}
+          <a
+            href={wazeHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500 px-3 py-1.5 text-xs font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-95"
           >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                open ? "bg-emerald-500" : "bg-slate-400"
-              }`}
-              aria-hidden="true"
-            />
-            {open ? "פתוח" : "סגור"}
-          </span>
+            <WazeIcon className="h-4 w-4" />
+            <span>Waze</span>
+          </a>
         </div>
-      </div>
-
-      {/* Row 2: Live Congestion & Parking Telemetry */}
-      <div className="mt-3">
-        <div
-          className={`inline-flex max-w-full items-center gap-2 rounded-2xl px-3 py-1.5 text-xs font-bold ${congestion.bg} ${congestion.text}`}
-        >
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${congestion.dot}`} aria-hidden="true" />
-          <span>{CONGESTION_LABEL[live.congestion]}</span>
-          <span className="opacity-75">({CONGESTION_HINT[live.congestion]})</span>
-          <span className="opacity-30" aria-hidden="true">
-            ·
-          </span>
-          <CarIcon className="h-3.5 w-3.5 shrink-0 opacity-70" />
-          <span className="truncate opacity-90">
-            חניה {PARKING_SHORT[live.parking]}
-          </span>
-        </div>
-      </div>
-
-      {/* Row 3: Address & Distance */}
-      <p className="mt-2.5 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-        <MapPinIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-        <span className="truncate">{branch.address}</span>
-        {distance !== null ? (
-          <>
-            <span className="text-slate-300" aria-hidden="true">·</span>
-            <span className="shrink-0 font-extrabold tabular-nums text-sky-600">
-              {formatDistance(distance)}
-            </span>
-          </>
-        ) : null}
-      </p>
-
-      {/* Row 4: Waze-style Action Bar */}
-      <div className="relative z-20 mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-        <a
-          href={wazeHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-sky-500 text-xs font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-98"
-        >
-          <WazeIcon className="h-4.5 w-4.5" />
-          ניווט ב-Waze
-        </a>
-        <button
-          type="button"
-          onClick={() => onReport(branch)}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-slate-100 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-98"
-        >
-          <UsersIcon className="h-4 w-4 text-slate-500" />
-          דווח עומס
-        </button>
       </div>
     </article>
   );

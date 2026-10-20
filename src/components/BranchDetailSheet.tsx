@@ -2,19 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
-import {
-  CONGESTION_HINT,
-  CONGESTION_LABEL,
-  PARKING_LABEL,
-  communityReports,
-  loadScore,
-} from "@/lib/live";
+import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
 import { minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
+import { getChainMeta } from "@/lib/chains";
 import {
   CarIcon,
-  ChartIcon,
   ClockIcon,
   CloseIcon,
   MapPinIcon,
@@ -23,38 +17,21 @@ import {
   UsersIcon,
   WazeIcon,
   StarIcon,
+  ZapIcon,
 } from "./icons";
 
 const HOUR_TICKS = [8, 10, 12, 14, 16, 18, 20, 22];
 
-const DOT: Record<Congestion, string> = {
-  free: "bg-emerald-500",
-  medium: "bg-amber-500",
-  heavy: "bg-rose-500",
+const CONGESTION_STATUS_MAP: Record<Congestion, { label: string; dot: string; text: string; bg: string }> = {
+  free: { label: "פנוי עכשיו — אין תור בקופות", dot: "bg-emerald-500", text: "text-emerald-800", bg: "bg-emerald-50" },
+  medium: { label: "עומס סביר (תור קצר של כ-5 דק׳)", dot: "bg-amber-500", text: "text-amber-800", bg: "bg-amber-50" },
+  heavy: { label: "עמוס בקופות (תורים ארוכים 15+ דק׳)", dot: "bg-rose-500", text: "text-rose-800", bg: "bg-rose-50" },
 };
 
 const BAR_COLOR: Record<Congestion, string> = {
-  free: "#22c55e",
+  free: "#10b981",
   medium: "#f59e0b",
-  heavy: "#ef4444",
-};
-
-const FEED_CONGESTION: Record<Congestion, string> = {
-  free: "קופות פנויות",
-  medium: "עומס בינוני",
-  heavy: "עומס כבד",
-};
-
-const FEED_PARKING: Record<Parking, string> = {
-  plenty: "חניה זמינה",
-  partial: "חניה חלקית",
-  none: "אין חניה",
-};
-
-const PARKING_ADVICE: Record<Parking, string> = {
-  plenty: "יש מקומות פנויים לאורך רוב שעות היום — כניסה מהירה לחניה.",
-  partial: "בשעות העומס החניה מתמלאת — מומלץ להגיע מוקדם או לקראת סגירה.",
-  none: "החניה באזור מוגבלת — חפשו חניה ברחובות הסמוכים או הגיעו ברגל.",
+  heavy: "#f43f5e",
 };
 
 function congestionFromLoad(load: number): Congestion {
@@ -65,7 +42,7 @@ function congestionFromLoad(load: number): Congestion {
 
 function minutesAgoLabel(at: number, now: number): string {
   const m = Math.max(0, Math.round((now - at) / 60000));
-  if (m < 1) return "כרגע";
+  if (m < 1) return "ממש עכשיו";
   if (m === 1) return "לפני דקה";
   return `לפני ${m} דקות`;
 }
@@ -87,12 +64,13 @@ export function BranchDetailSheet({
 }) {
   const [copied, setCopied] = useState(false);
   const date = useMemo(() => new Date(now), [now]);
-  const status = useMemo(
-    () => openStatus(branch.scheduleIdx, date),
-    [branch.scheduleIdx, date],
-  );
+  const status = useMemo(() => openStatus(branch.scheduleIdx, date), [branch.scheduleIdx, date]);
   const hours = useMemo(() => weeklyHours(branch.scheduleIdx), [branch.scheduleIdx]);
   const reports = useMemo(() => communityReports(branch, now), [branch, now]);
+  const chainMeta = getChainMeta(branch.chain);
+  const { isFavorite, toggleFavorite } = useLive();
+  const favorite = isFavorite(branch.id);
+
   const bars = useMemo(
     () =>
       HOUR_TICKS.map((hour) => {
@@ -103,15 +81,13 @@ export function BranchDetailSheet({
       }),
     [branch, now],
   );
+
   const currentHour = date.getHours();
   const quietestHour = useMemo(() => {
     if (!bars.length) return null;
     return [...bars].sort((a, b) => a.load - b.load)[0];
   }, [bars]);
-  const { isFavorite, toggleFavorite } = useLive();
-  const favorite = isFavorite(branch.id);
-  
-  // Waze deep link with venue name for 100% exact resolution in Waze app
+
   const queryName = encodeURIComponent(`${branch.chain} ${branch.name}`);
   const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&q=${queryName}&navigate=yes`;
 
@@ -129,7 +105,7 @@ export function BranchDetailSheet({
 
   const share = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
-    const text = `${branch.name} (${branch.chain}) · עומס ${CONGESTION_LABEL[live.congestion]} · Zerem`;
+    const text = `${branch.name} (${branch.chain}) · ${CONGESTION_STATUS_MAP[live.congestion].label} · Zerem`;
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: "זרם", text, url });
@@ -141,242 +117,184 @@ export function BranchDetailSheet({
         setTimeout(() => setCopied(false), 2000);
       }
     } catch {
-      // User cancelled
+      // dismissed
     }
   };
+
+  const cong = CONGESTION_STATUS_MAP[live.congestion];
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="branch-detail-title"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs"
+      aria-labelledby="branch-title"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 backdrop-blur-xs sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] bg-white text-slate-900 shadow-2xl"
+        className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-t-[2.2rem] sm:rounded-3xl bg-white shadow-2xl text-right animate-pop"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Grabber bar */}
-        <div className="flex justify-center pt-3 pb-1">
+        {/* Grab bar */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="h-1.5 w-12 rounded-full bg-slate-200" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 pb-3.5 pt-2">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="rounded-lg bg-sky-50 px-2 py-0.5 text-xs font-bold text-sky-700">
-                {branch.chain}
-              </span>
-              <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
-                {branch.city}
-              </span>
+        {/* Top Header */}
+        <div className="flex items-start justify-between gap-3 p-5 pb-3 border-b border-slate-100">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm text-base font-black ${chainMeta.bg} ${chainMeta.text}`}>
+              {chainMeta.logoLetter}
             </div>
-            <h2
-              id="branch-detail-title"
-              className="mt-1 text-xl font-black tracking-tight text-slate-900"
-            >
-              {branch.name}
-            </h2>
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-              <MapPinIcon className="h-3.5 w-3.5 text-slate-400" />
-              <span>{branch.address}</span>
-              {distance !== null ? (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="font-extrabold text-sky-600">
-                    {formatDistance(distance)}
-                  </span>
-                </>
-              ) : null}
-            </p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`rounded-md border px-2 py-0.5 text-xs font-bold ${chainMeta.badgeBg} ${chainMeta.badgeText}`}>
+                  {chainMeta.shortName}
+                </span>
+                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
+                  {branch.city}
+                </span>
+              </div>
+              <h2 id="branch-title" className="mt-1 text-lg font-black text-slate-900 truncate">
+                {branch.name}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5 truncate">
+                {branch.address}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => toggleFavorite(branch.id)}
-              aria-label={favorite ? "הסר ממועדפים" : "הוסף למועדפים"}
-              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200"
+              className="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-100 transition"
+              aria-label="מועדף"
             >
-              <StarIcon
-                filled={favorite}
-                className={`h-4.5 w-4.5 ${favorite ? "text-amber-400" : "text-slate-400"}`}
-              />
+              <StarIcon filled={favorite} className={`h-5 w-5 ${favorite ? "text-amber-400" : ""}`} />
             </button>
             <button
               type="button"
               onClick={share}
+              className="grid h-9 w-9 place-items-center rounded-full text-slate-400 hover:bg-slate-100 transition"
               aria-label="שתף"
-              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200"
             >
-              <ShareIcon className="h-4 w-4" />
+              <ShareIcon className="h-5 w-5" />
             </button>
             <button
               type="button"
               onClick={onClose}
+              className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
               aria-label="סגור"
-              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 hover:bg-slate-200"
             >
-              <CloseIcon className="h-4 w-4" />
+              <CloseIcon className="h-4.5 w-4.5" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 no-scrollbar">
-          {/* Live Status Card */}
-          <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+        {/* Content Body */}
+        <div className="p-5 space-y-4">
+          {/* Live Status Pill */}
+          <div className={`rounded-3xl border border-slate-200/80 p-4 ${cong.bg}`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500">מצב עומס נוכחי בלייב</span>
-              <span className="text-xs font-bold text-slate-600">
-                {status.open ? "פתוח עכשיו" : "סגור כעת"}
+              <div className="flex items-center gap-2">
+                <span className={`h-3 w-3 rounded-full ${cong.dot} animate-pulse`} />
+                <span className={`text-sm font-black ${cong.text}`}>
+                  {cong.label}
+                </span>
+              </div>
+              <span className={`text-xs font-bold ${status.open ? "text-emerald-700" : "text-rose-700"}`}>
+                {status.text}
               </span>
             </div>
-            <div className="mt-2.5 flex items-center gap-3">
-              <span className={`h-4 w-4 rounded-full shrink-0 ${DOT[live.congestion]}`} />
-              <div>
-                <p className="text-lg font-black text-slate-900">
-                  {CONGESTION_LABEL[live.congestion]}
-                </p>
-                <p className="text-xs text-slate-500 font-medium">
-                  {CONGESTION_HINT[live.congestion]}
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {/* Hourly Congestion Chart */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-card">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <ChartIcon className="h-4 w-4 text-sky-600" />
-                צפי עומס לפי שעות היום
+            {/* Smart Quiet Hours Recommendation */}
+            {quietestHour && (
+              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/90 p-2.5 text-xs text-slate-800 font-bold border border-slate-100">
+                <ZapIcon className="h-4 w-4 text-amber-500 shrink-0" />
+                <span>שעה מומלצת להגעה היום: סביב {quietestHour.hour}:00 (ללא תור וחניה בשפע)</span>
+              </div>
+            )}
+
+            {/* Hourly congestion graph */}
+            <div className="mt-4 pt-3 border-t border-slate-200/60">
+              <p className="text-[0.72rem] font-bold text-slate-600 mb-2">
+                תחזית עומסים לפי שעות היום:
               </p>
-              <span className="text-[0.68rem] text-slate-400 font-bold">מודל חכם</span>
-            </div>
-
-            {quietestHour ? (
-              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 p-2.5 text-xs text-emerald-800 font-bold">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                <span>שעה אידיאלית להגעה היום: סביב {quietestHour.hour}:00 (עומס מינימלי וחניה זמינה)</span>
-              </div>
-            ) : null}
-
-            <div className="mt-4 flex items-end justify-between gap-1.5 pt-2 h-24">
-              {bars.map(({ hour, load, congestion }) => {
-                const heightPct = Math.max(16, Math.round(load * 100));
-                const isCurrent = Math.abs(currentHour - hour) <= 1;
-                return (
-                  <div key={hour} className="flex flex-1 flex-col items-center gap-1.5 h-full justify-end">
-                    <div
-                      className={`w-full rounded-t-lg transition-all ${
-                        isCurrent
-                          ? "ring-2 ring-sky-500 shadow-sm"
-                          : "opacity-80"
-                      }`}
-                      style={{
-                        height: `${heightPct}%`,
-                        backgroundColor: BAR_COLOR[congestion],
-                      }}
-                      title={`${hour}:00 - עומס ${CONGESTION_LABEL[congestion]}`}
-                    />
-                    <span
-                      className={`text-[0.66rem] tabular-nums font-bold ${
-                        isCurrent ? "text-sky-600" : "text-slate-400"
-                      }`}
-                    >
-                      {hour}:00
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Parking Card */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-card">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-2xl bg-sky-50 text-sky-600">
-                <CarIcon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-900">
-                  {PARKING_LABEL[live.parking]}
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-slate-500 font-medium">
-                  {PARKING_ADVICE[live.parking]}
-                </p>
+              <div className="flex items-end justify-between gap-1.5 h-20 pt-1">
+                {bars.map(({ hour, load, congestion }) => {
+                  const heightPct = Math.max(18, Math.round(load * 100));
+                  const isCurrent = Math.abs(currentHour - hour) <= 1;
+                  return (
+                    <div key={hour} className="flex flex-1 flex-col items-center gap-1 h-full justify-end">
+                      <div
+                        className={`w-full rounded-t-lg transition-all ${
+                          isCurrent ? "ring-2 ring-sky-500 shadow-sm" : "opacity-85"
+                        }`}
+                        style={{
+                          height: `${heightPct}%`,
+                          backgroundColor: BAR_COLOR[congestion],
+                        }}
+                      />
+                      <span className={`text-[0.66rem] font-bold tabular-nums ${isCurrent ? "text-sky-600" : "text-slate-400"}`}>
+                        {hour}:00
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Weekly Hours */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-card">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-              <ClockIcon className="h-4 w-4 text-sky-600" />
-              שעות פתיחה
-            </p>
-            <div className="mt-2.5 divide-y divide-slate-100">
-              {hours.map((row) => (
-                <div key={row.key} className="flex items-center justify-between py-2 text-xs">
-                  <span className="font-semibold text-slate-600">{row.label}</span>
-                  <span
-                    className={`font-bold tabular-nums ${
-                      row.value === "סגור" ? "text-slate-400" : "text-slate-900"
-                    }`}
-                  >
-                    {row.value}
-                  </span>
-                </div>
-              ))}
+          {/* Parking & Weekly Hours */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+              <p className="flex items-center gap-1.5 text-xs font-black text-slate-800">
+                <CarIcon className="h-4 w-4 text-sky-600" />
+                מצב חניה
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-900">
+                {PARKING_LABEL[live.parking]}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {distance !== null ? `מרחק: ${formatDistance(distance)} ממך` : "חניה מוסדרת בסניף"}
+              </p>
             </div>
-          </div>
 
-          {/* Community Reports */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-card">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-              <SparkIcon className="h-4 w-4 text-amber-500" />
-              דיווחים אחרונים מהקהילה
-            </p>
-            <div className="mt-2.5 space-y-2">
-              {reports.slice(0, 4).map((report, idx) => (
-                <div
-                  key={`${report.at}-${idx}`}
-                  className="flex items-center gap-2.5 rounded-2xl bg-slate-50 px-3 py-2 text-xs"
-                >
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${DOT[report.congestion]}`} />
-                  <p className="text-slate-700">
-                    <span className="font-bold text-slate-500">
-                      {minutesAgoLabel(report.at, now)}:{" "}
-                    </span>
-                    {FEED_CONGESTION[report.congestion]} · {FEED_PARKING[report.parking]}
-                  </p>
-                </div>
-              ))}
+            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
+              <p className="flex items-center gap-1.5 text-xs font-black text-slate-800">
+                <ClockIcon className="h-4 w-4 text-sky-600" />
+                שעות פעילות
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-900">
+                {branch.hours || "סניף פתוח בימי חול"}
+              </p>
+              <p className="mt-0.5 text-[0.68rem] text-slate-500">
+                מעודכן לימי חול וערבי חג
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Sticky Action Bar */}
-        <div className="border-t border-slate-100 bg-white px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3">
+        {/* Sticky Action Footer */}
+        <div className="p-4 pt-2 border-t border-slate-100 bg-white sticky bottom-0 space-y-2">
           <a
             href={wazeHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 text-sm font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-98"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-sky-500 text-sm font-black text-white shadow-md transition hover:bg-sky-600 active:scale-98"
           >
             <WazeIcon className="h-5 w-5" />
-            ניווט Waze לסניף
+            <span>סע עכשיו ב-Waze לחניה</span>
           </a>
+
           <button
             type="button"
             onClick={() => onReport(branch)}
-            className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-98"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100 transition active:scale-98"
           >
             <UsersIcon className="h-4 w-4 text-slate-500" />
-            דווח עומס בסניף זה
+            <span>דווח על מצב התור עכשיו</span>
           </button>
         </div>
       </div>
