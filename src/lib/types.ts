@@ -60,6 +60,8 @@ export interface Branch {
   size: BranchSize;
   /** Optional exact Waze search string (overrides the auto-generated one). */
   wazeQuery?: string;
+  isCustom?: boolean;
+  addedBy?: string;
 }
 
 export type ReportSource = "user" | "community";

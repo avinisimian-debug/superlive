@@ -104,6 +104,10 @@ export function BranchDetailSheet({
     [branch, now],
   );
   const currentHour = date.getHours();
+  const quietestHour = useMemo(() => {
+    if (!bars.length) return null;
+    return [...bars].sort((a, b) => a.load - b.load)[0];
+  }, [bars]);
   const { isFavorite, toggleFavorite } = useLive();
   const favorite = isFavorite(branch.id);
   
@@ -252,6 +256,13 @@ export function BranchDetailSheet({
               </p>
               <span className="text-[0.68rem] text-slate-400 font-bold">מודל חכם</span>
             </div>
+
+            {quietestHour ? (
+              <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 p-2.5 text-xs text-emerald-800 font-bold">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                <span>שעה אידיאלית להגעה היום: סביב {quietestHour.hour}:00 (עומס מינימלי וחניה זמינה)</span>
+              </div>
+            ) : null}
 
             <div className="mt-4 flex items-end justify-between gap-1.5 pt-2 h-24">
               {bars.map(({ hour, load, congestion }) => {

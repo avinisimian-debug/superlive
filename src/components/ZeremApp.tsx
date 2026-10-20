@@ -34,7 +34,7 @@ const SORT_LABEL: Record<SortMode, string> = {
 };
 
 export function ZeremApp() {
-  const { ready, now, location, getLive, submitReport, totalSubmissions, favorites } =
+  const { ready, now, location, getLive, submitReport, totalSubmissions, favorites, customBranches } =
     useLive();
 
   const [currentTab, setCurrentTab] = useState<AppTab>("feed");
@@ -51,21 +51,27 @@ export function ZeremApp() {
   const deferredSearch = useDeferredValue(search);
   const date = useMemo(() => new Date(now), [now]);
 
+  const allBranches = useMemo(() => {
+    return customBranches && customBranches.length > 0
+      ? [...customBranches, ...BRANCHES]
+      : BRANCHES;
+  }, [customBranches]);
+
   // Live state for every branch
   const liveById = useMemo(() => {
     const map = new Map<string, LiveState>();
-    for (const branch of BRANCHES) map.set(branch.id, getLive(branch));
+    for (const branch of allBranches) map.set(branch.id, getLive(branch));
     return map;
-  }, [getLive]);
+  }, [getLive, allBranches]);
 
   // Determine branch pool: all branches for "feed", only favorited branches for "favorites"
   const pool = useMemo(() => {
     if (currentTab === "favorites") {
       const favSet = new Set(favorites);
-      return BRANCHES.filter((b) => favSet.has(b.id));
+      return allBranches.filter((b) => favSet.has(b.id));
     }
-    return BRANCHES;
-  }, [currentTab, favorites]);
+    return allBranches;
+  }, [currentTab, favorites, allBranches]);
 
   // Filter pool
   const base = useMemo(() => {

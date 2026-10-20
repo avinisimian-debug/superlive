@@ -24,6 +24,9 @@ const REPORTS_KEY = "zerem.reports.v1";
 const LOCATION_KEY = "zerem.location.v1";
 const FAVORITES_KEY = "zerem.favorites.v1";
 const MY_REPORTS_KEY = "zerem.my_reports.v1";
+const IS_PRO_KEY = "zerem.is_pro.v1";
+const CUSTOM_BRANCHES_KEY = "zerem.custom_branches.v1";
+const SMART_ALERTS_KEY = "zerem.smart_alerts.v1";
 
 type ReportsMap = Record<string, Report[]>;
 
@@ -33,6 +36,16 @@ export interface MyReportItem {
   congestion: Congestion;
   parking: Parking;
   at: number;
+}
+
+export interface NewBranchInput {
+  name: string;
+  chain: Branch["chain"];
+  city: string;
+  address: string;
+  size?: Branch["size"];
+  lat?: number;
+  lng?: number;
 }
 
 interface LiveContextValue {
@@ -56,6 +69,12 @@ interface LiveContextValue {
   toggleFavorite: (branchId: string) => void;
   isFavorite: (branchId: string) => boolean;
   myReports: MyReportItem[];
+  isPro: boolean;
+  togglePro: (val?: boolean) => void;
+  customBranches: Branch[];
+  addCustomBranch: (input: NewBranchInput) => Branch;
+  smartAlerts: boolean;
+  toggleSmartAlerts: () => void;
 }
 
 const LiveContext = createContext<LiveContextValue | null>(null);
@@ -73,11 +92,6 @@ function loadJson<T>(key: string, fallback: T): T {
 
 const emptySubscribe = () => () => {};
 
-/**
- * True only after the client has hydrated. Uses the server snapshot during SSR
- * and the first hydration render, then flips — so localStorage-backed state can
- * be read without ever producing an SSR/client mismatch.
- */
 function useHydrated(): boolean {
   return useSyncExternalStore(
     emptySubscribe,
@@ -107,9 +121,19 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     return stored ? !stored.label.includes("ברירת מחדל") : false;
   });
   const [toast, setToast] = useState<string | null>(null);
+
+  const [isPro, setIsProState] = useState<boolean>(() =>
+    loadJson<boolean>(IS_PRO_KEY, false),
+  );
+  const [customBranches, setCustomBranches] = useState<Branch[]>(() =>
+    loadJson<Branch[]>(CUSTOM_BRANCHES_KEY, []),
+  );
+  const [smartAlerts, setSmartAlerts] = useState<boolean>(() =>
+    loadJson<boolean>(SMART_ALERTS_KEY, true),
+  );
+
   const ready = hydrated;
 
-  // Keep the "live" clock ticking so decay and "time ago" stay honest.
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
@@ -141,6 +165,33 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       /* ignore */
     }
   }, [myReports, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(IS_PRO_KEY, JSON.stringify(isPro));
+    } catch {
+      /* ignore */
+    }
+  }, [isPro, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(CUSTOM_BRANCHES_KEY, JSON.stringify(customBranches));
+    } catch {
+      /* ignore */
+    }
+  }, [customBranches, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(SMART_ALERTS_KEY, JSON.stringify(smartAlerts));
+    } catch {
+      /* ignore */
+    }
+  }, [smartAlerts, ready]);
 
   const persistLocation = useCallback((loc: UserLocation) => {
     setLocation(loc);
@@ -193,6 +244,47 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     [favorites],
   );
 
+  const togglePro = useCallback((val?: boolean) => {
+    setIsProState((prev) => {
+      const next = typeof val === "boolean" ? val : !prev;
+      setToast(next ? "ברוך הבא ל-Zerem Pro! המנוי הופעל בהצלחה 👑" : "מנוי Pro הופסק");
+      return next;
+    });
+  }, []);
+
+  const toggleSmartAlerts = useCallback(() => {
+    setSmartAlerts((prev) => {
+      const next = !prev;
+      setToast(next ? "התראות עומס חכמות הופעלו 🔔" : "התראות עומס חכמות כובו");
+      return next;
+    });
+  }, []);
+
+  const addCustomBranch = useCallback(
+    (input: NewBranchInput): Branch => {
+      const id = `custom-${Date.now()}`;
+      const newBranch: Branch = {
+        id,
+        name: input.name.trim(),
+        chain: input.chain,
+        city: input.city.trim(),
+        address: input.address.trim(),
+        lat: input.lat ?? location.lat,
+        lng: input.lng ?? location.lng,
+        scheduleIdx: 0,
+        hours: "08:00–21:00",
+        size: input.size ?? "standard",
+        isCustom: true,
+      };
+
+      setCustomBranches((prev) => [newBranch, ...prev]);
+      setFavorites((prev) => [...prev, id]);
+      setToast("הסניף החדש נוסף בהצלחה למפה ולמועדפים שלך! 🎉");
+      return newBranch;
+    },
+    [location],
+  );
+
   const submitReport = useCallback(
     (branch: Branch, congestion: Congestion, parking: Parking) => {
       const report: Report = {
@@ -217,7 +309,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         ...prev.slice(0, 20),
       ]);
       setNow(Date.now());
-      setToast("תודה! הדיווח עודכן בלייב 🙌");
+      setToast(isPro ? "תודה VIP! הדיווח עודכן בעדיפות כפולה 👑" : "תודה! הדיווח עודכן בלייב 🙌");
 
       void fetch("/api/reports", {
         method: "POST",
@@ -232,7 +324,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
         /* ignore */
       });
     },
-    [],
+    [isPro],
   );
 
   useEffect(() => {
@@ -273,6 +365,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       toggleFavorite,
       isFavorite,
       myReports,
+      isPro,
+      togglePro,
+      customBranches,
+      addCustomBranch,
+      smartAlerts,
+      toggleSmartAlerts,
     };
   }, [
     ready,
@@ -288,6 +386,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     toggleFavorite,
     isFavorite,
     myReports,
+    isPro,
+    togglePro,
+    customBranches,
+    addCustomBranch,
+    smartAlerts,
+    toggleSmartAlerts,
   ]);
 
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>;
