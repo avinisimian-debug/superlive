@@ -27,6 +27,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [verifyingProof, setVerifyingProof] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [showForgotGuide, setShowForgotGuide] = useState(false);
 
   // Email for notification
@@ -97,6 +98,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     const file = e.target.files?.[0];
     if (file) {
       setProofFile(file);
+      setVerificationError(null);
       const url = URL.createObjectURL(file);
       setProofPreview(url);
     }
@@ -114,10 +116,34 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     }
 
     setVerifyingProof(true);
+    setVerificationError(null);
 
     try {
+      // Real OCR & data verification on server
+      const formData = new FormData();
+      formData.append("file", proofFile);
+
+      const verifyRes = await fetch("/api/vip/verify-proof", {
+        method: "POST",
+        body: formData,
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyRes.ok || !verifyData.valid) {
+        const errorReason =
+          verifyData.reason ||
+          verifyData.error ||
+          "האישור נדחה: לא זוהתה העברה תואמת לאביה ברוך נסימיאן על סך ₪9.90 מהיום.";
+        setVerificationError(errorReason);
+        showToast(errorReason);
+        setVerifyingProof(false);
+        return;
+      }
+
+      // Verification passed! Activate VIP subscription
       const generatedCode = `ZR-BP-${Math.floor(100000 + Math.random() * 900000)}`;
-      
+
       const res = await fetch("/api/vip/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,7 +156,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
       });
 
       const data = await res.json();
-      
+
       const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
         day: "numeric",
         month: "numeric",
@@ -141,20 +167,10 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
       setExpiryDateFormatted(in30Days);
       activatePro(30);
       setSuccess(true);
-      showToast("צילום המסך אומת בהצלחה ומנוי ה-VIP הופעל ל-30 יום! 👑");
-    } catch {
-      // Fallback local activation if network fails
-      const generatedCode = `ZR-BP-${Math.floor(100000 + Math.random() * 900000)}`;
-      const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
-        day: "numeric",
-        month: "numeric",
-        year: "numeric",
-      });
-      setAuthCode(generatedCode);
-      setExpiryDateFormatted(in30Days);
-      activatePro(30);
-      setSuccess(true);
-      showToast("מנוי ה-VIP הופעל בהצלחה ל-30 יום! 👑");
+      showToast("האסמכתא אומתה בהצלחה! מנוי ה-VIP הופעל ל-30 יום 👑");
+    } catch (err: any) {
+      setVerificationError("שגיאה בסריקת האסמכתא. נא לוודא שצילום המסך ברור וקריא.");
+      showToast("שגיאה בסריקת האסמכתא. נא לנסות שנית.");
     } finally {
       setVerifyingProof(false);
     }
@@ -545,6 +561,21 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                       </label>
                     )}
                   </div>
+
+                  {/* Verification Error Callout */}
+                  {verificationError && (
+                    <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-3 text-right animate-shake">
+                      <div className="flex items-start gap-2">
+                        <span className="text-base text-rose-600">❌</span>
+                        <div>
+                          <p className="text-xs font-black text-rose-950">האסמכתא נדחתה</p>
+                          <p className="mt-0.5 text-[0.72rem] text-rose-800 font-medium leading-relaxed">
+                            {verificationError}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Verification CTA */}
                   <button
