@@ -14,6 +14,8 @@ import {
 
 type PaymentMethod = "card" | "bit" | "paypal";
 
+const BIT_PAY_URL = "https://www.bitpay.co.il/app/share-info?i=Eok7YIlA&j=true";
+
 export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const { isPro, togglePro, showToast } = useLive();
   const [method, setMethod] = useState<PaymentMethod>("card");
@@ -85,15 +87,9 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
   };
 
   const handleBitApp = () => {
-    const phone = "0555573090";
     if (typeof window !== "undefined") {
-      window.location.href = `bit://send?phone=${phone}&amount=9.90`;
-      setTimeout(() => {
-        // Fallback copy
-        navigator.clipboard.writeText("055-557-3090");
-        setCopied(true);
-        showToast("מספר הטלפון להעברה ב-Bit הועתק: 055-557-3090");
-      }, 500);
+      window.open(BIT_PAY_URL, "_blank");
+      showToast("פותח את בקשת התשלום ב-Bit על סך ₪9.90");
     }
   };
 
@@ -372,9 +368,9 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
             {method === "bit" && (
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs text-blue-950">
-                  <p className="font-black text-sm">העברה מהירה ב-Bit / PayBox</p>
+                  <p className="font-black text-sm">תשלום ישיר ב-Bit (אביה ברוך נסימיאן · Zerem)</p>
                   <p className="mt-1 text-slate-600">
-                    העבירו ₪9.90 לנייד: <strong className="font-mono text-slate-900 text-sm">055-557-3090</strong> (אביה נסימיאן)
+                    לחצו על הכפתור למטה למעבר ישיר לבקשת התשלום ב-Bit על סך <strong>₪9.90</strong>.
                   </p>
                 </div>
 
@@ -384,7 +380,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                     onClick={handleBitApp}
                     className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-blue-600 text-xs font-black text-white hover:bg-blue-700 transition"
                   >
-                    <span>פתח אפליקציית Bit</span>
+                    <span>שלם ₪9.90 ב-Bit ↗</span>
                   </button>
                   <button
                     type="button"
