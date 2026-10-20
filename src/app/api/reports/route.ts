@@ -1,51 +1,98 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { currentUser } from "@/lib/server/current-user";
-import { addReport, logActivity } from "@/lib/server/auth-store";
+import { logActivity } from "@/lib/server/auth-store";
+import {
+  validateReportInput,
+  checkRateLimit,
+  submitReportToDb,
+  getBranchReportsFromDb,
+} from "@/lib/server/crowd-engine";
 
 export const runtime = "nodejs";
 
-interface Body {
-  branchId?: unknown;
-  branchName?: unknown;
-  congestion?: unknown;
-  parking?: unknown;
-}
-
 export async function POST(req: NextRequest) {
-  let body: Body = {};
+  let body: any = {};
   try {
-    body = (await req.json()) as Body;
+    body = await req.json();
   } catch {
-    body = {};
-  }
-
-  const branchId = typeof body.branchId === "string" ? body.branchId : "";
-  const branchName = typeof body.branchName === "string" ? body.branchName : "";
-  const congestion = typeof body.congestion === "string" ? body.congestion : "";
-  const parking = typeof body.parking === "string" ? body.parking : "";
-
-  if (!branchId || !congestion) {
     return NextResponse.json(
-      { success: false, error: "דיווח חסר נתונים" },
-      { status: 400 },
+      { success: false, error: "גוף הבקשה אינו בפורמט JSON תקין" },
+      { status: 400 }
     );
   }
 
+  // 1. Strict Validation
+  const validation = validateReportInput(body);
+  if (!validation.valid || !validation.clean) {
+    return NextResponse.json(
+      { success: false, error: validation.error || "נתוני דיווח לא תקינים" },
+      { status: 422 }
+    );
+  }
+
+  const { branchId, branchName, congestion, parking } = validation.clean;
+
+  // 2. Client IP & Rate Limiting
+  const forwarded = req.headers.get("x-forwarded-for");
+  const clientIp = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
+
+  if (!checkRateLimit(branchId, clientIp)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "דיווחת על סניף זה לאחרונה. נא להמתין כחצי דקה לפני דיווח נוסף.",
+      },
+      { status: 429 }
+    );
+  }
+
+  // 3. Current User context
   const user = await currentUser(req);
-  await addReport({
-    at: new Date().toISOString(),
+
+  // 4. Persistence to Postgres + Live State recalculation
+  const result = await submitReportToDb({
     branchId,
     branchName,
     congestion,
     parking,
-    email: user?.email,
+    userEmail: user?.email,
+    clientIp,
   });
-  await logActivity(
+
+  // 5. Activity log
+  void logActivity(
     "report",
-    `דיווח עומס · ${branchName || branchId}`,
-    user?.email,
+    `דיווח עומס: ${congestion} · ${branchName || branchId}`,
+    user?.email
   );
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    reportId: result.reportId,
+    status: result.status,
+  });
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const branchId = searchParams.get("branchId");
+  const limitParam = searchParams.get("limit");
+  const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 20, 1), 50) : 20;
+
+  if (!branchId) {
+    return NextResponse.json(
+      { success: false, error: "נדרש פרמטר branchId" },
+      { status: 400 }
+    );
+  }
+
+  const reports = await getBranchReportsFromDb(branchId, limit);
+
+  return NextResponse.json({
+    success: true,
+    branchId,
+    count: reports.length,
+    reports,
+  });
 }
