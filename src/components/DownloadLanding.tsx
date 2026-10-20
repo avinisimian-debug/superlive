@@ -325,23 +325,23 @@ export function DownloadLanding() {
               </a>
             </div>
 
-            {/* Social / Trust Badges */}
+            {/* Verified Facts & Coverage */}
             <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto pt-6 border-t border-slate-200/60">
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
                 <p className="text-xl font-black text-sky-600 tabular-nums">3,449</p>
-                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">סניפים בכל הארץ</p>
+                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">סניפים בפריסה ארצית</p>
               </div>
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
-                <p className="text-xl font-black text-emerald-600 tabular-nums">15,400+</p>
-                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">דיווחי קהילה פעילים</p>
+                <p className="text-xl font-black text-emerald-600 tabular-nums">1,174</p>
+                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">יישובים מקצה לקצה</p>
               </div>
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
-                <p className="text-xl font-black text-amber-500 tabular-nums">28 דקות</p>
-                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">חיסכון ממוצע לקנייה</p>
+                <p className="text-xl font-black text-teal-600 tabular-nums">100%</p>
+                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">רשתות השיווק בישראל</p>
               </div>
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
-                <p className="text-xl font-black text-blue-600 tabular-nums">100%</p>
-                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">חיבור ישיר ל-Waze</p>
+                <p className="text-xl font-black text-blue-600 tabular-nums">Waze</p>
+                <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">ניווט ישיר לחניה</p>
               </div>
             </div>
           </div>
@@ -595,42 +595,63 @@ export function DownloadLanding() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-14 sm:py-20 bg-slate-50 border-b border-slate-200/80">
+      {/* How Zerem Works */}
+      <section id="how-it-works" className="py-14 sm:py-20 bg-slate-50 border-b border-slate-200/80">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto">
             <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-black text-sky-800">
-              מה אומרים הקונים
+              פשוט, מהיר וחכם
             </span>
             <h2 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900">
-              אלפי ישראלים כבר חוסכים זמן בכל קנייה
+              איך זרם חוסך לך זמן בקניות?
             </h2>
           </div>
 
           <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {TESTIMONIALS.map((t, idx) => (
-              <div key={idx} className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card text-right flex flex-col justify-between">
-                <div>
-                  <div className="flex text-amber-400 mb-3">
-                    {[0, 1, 2, 3, 4].map((s) => (
-                      <StarIcon key={s} filled className="h-4 w-4" />
-                    ))}
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card text-right flex flex-col justify-between">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 font-black text-lg mb-4">
+                  1
                 </div>
-                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-black text-slate-900">{t.author}</p>
-                    <p className="text-[0.68rem] text-slate-400">{t.city}</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[0.66rem] font-bold text-emerald-700">
-                    {t.saved}
-                  </span>
-                </div>
+                <h3 className="text-base font-black text-slate-900">בדיקת עומס וחניה בזמן אמת</h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  פותחים את האפליקציה ורואים מיד באיזה סופר קרוב פנוי עכשיו (ירוק), בינוני (כתום) או עמוס (אדום), כולל מצב חניה מעודכן.
+                </p>
               </div>
-            ))}
+              <div className="mt-5 pt-3 border-t border-slate-100">
+                <span className="text-xs font-bold text-emerald-700">✓ התראות עומס חיות</span>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card text-right flex flex-col justify-between">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 font-black text-lg mb-4">
+                  2
+                </div>
+                <h3 className="text-base font-black text-slate-900">שעת הגעה אידיאלית והשוואה</h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  האלגוריתם מחשב עבור כל סניף את השעה המומלצת ביותר להגעה לפי שעות הפתיחה והיסטוריית העומסים, ומאפשר להשוות רשתות סמוכות.
+                </p>
+              </div>
+              <div className="mt-5 pt-3 border-t border-slate-100">
+                <span className="text-xs font-bold text-sky-700">✓ תזמון חכם למניעת תורים</span>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card text-right flex flex-col justify-between">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700 font-black text-lg mb-4">
+                  3
+                </div>
+                <h3 className="text-base font-black text-slate-900">ניווט מדויק ישירות ל-Waze</h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  לחיצה אחת פותחת את Waze עם שם הסניף והרשת המדויקים וקואורדינטות GPS היישר לכניסה ולחניון הסופר.
+                </p>
+              </div>
+              <div className="mt-5 pt-3 border-t border-slate-100">
+                <span className="text-xs font-bold text-blue-700">✓ יעד מדויק ללא שגיאות מיקום</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
