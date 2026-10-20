@@ -25,6 +25,7 @@ const LOCATION_KEY = "zerem.location.v1";
 const FAVORITES_KEY = "zerem.favorites.v1";
 const MY_REPORTS_KEY = "zerem.my_reports.v1";
 const IS_PRO_KEY = "zerem.is_pro.v1";
+const PRO_EXPIRES_KEY = "zerem.pro_expires.v1";
 const CUSTOM_BRANCHES_KEY = "zerem.custom_branches.v1";
 const SMART_ALERTS_KEY = "zerem.smart_alerts.v1";
 
@@ -70,6 +71,10 @@ interface LiveContextValue {
   isFavorite: (branchId: string) => boolean;
   myReports: MyReportItem[];
   isPro: boolean;
+  proExpiresAt: number | null;
+  proDaysLeft: number;
+  proExpired: boolean;
+  activatePro: (days?: number) => void;
   togglePro: (val?: boolean) => void;
   customBranches: Branch[];
   addCustomBranch: (input: NewBranchInput) => Branch;
@@ -122,9 +127,14 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   });
   const [toast, setToast] = useState<string | null>(null);
 
-  const [isPro, setIsProState] = useState<boolean>(() =>
-    loadJson<boolean>(IS_PRO_KEY, false),
+  const [proExpiresAt, setProExpiresAt] = useState<number | null>(() =>
+    loadJson<number | null>(PRO_EXPIRES_KEY, null),
   );
+  const isPro = Boolean(proExpiresAt && proExpiresAt > now);
+  const proDaysLeft = proExpiresAt && proExpiresAt > now
+    ? Math.ceil((proExpiresAt - now) / (24 * 60 * 60 * 1000))
+    : 0;
+  const proExpired = Boolean(proExpiresAt && proExpiresAt <= now);
   const [customBranches, setCustomBranches] = useState<Branch[]>(() =>
     loadJson<Branch[]>(CUSTOM_BRANCHES_KEY, []),
   );
@@ -169,11 +179,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     try {
+      window.localStorage.setItem(PRO_EXPIRES_KEY, JSON.stringify(proExpiresAt));
       window.localStorage.setItem(IS_PRO_KEY, JSON.stringify(isPro));
     } catch {
       /* ignore */
     }
-  }, [isPro, ready]);
+  }, [proExpiresAt, isPro, ready]);
 
   useEffect(() => {
     if (!ready) return;
@@ -244,13 +255,20 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     [favorites],
   );
 
-  const togglePro = useCallback((val?: boolean) => {
-    setIsProState((prev) => {
-      const next = typeof val === "boolean" ? val : !prev;
-      setToast(next ? "ברוך הבא ל-Zerem Pro! המנוי הופעל בהצלחה 👑" : "מנוי Pro הופסק");
-      return next;
-    });
+  const activatePro = useCallback((days: number = 30) => {
+    const expiresAt = Date.now() + days * 24 * 60 * 60 * 1000;
+    setProExpiresAt(expiresAt);
+    setToast(`מנוי Zerem Pro הופעל ל-${days} ימים! 👑`);
   }, []);
+
+  const togglePro = useCallback((val?: boolean) => {
+    if (val === false) {
+      setProExpiresAt(null);
+      setToast("מנוי Pro הופסק");
+    } else {
+      activatePro(30);
+    }
+  }, [activatePro]);
 
   const toggleSmartAlerts = useCallback(() => {
     setSmartAlerts((prev) => {
@@ -366,6 +384,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       isFavorite,
       myReports,
       isPro,
+      proExpiresAt,
+      proDaysLeft,
+      proExpired,
+      activatePro,
       togglePro,
       customBranches,
       addCustomBranch,

@@ -38,6 +38,9 @@ export function PersonalArea({
     totalSubmissions,
     showToast,
     isPro,
+    proExpiresAt,
+    proDaysLeft,
+    proExpired,
     customBranches,
     smartAlerts,
     toggleSmartAlerts,
@@ -110,7 +113,9 @@ export function PersonalArea({
               </h2>
               <p className={`mt-1 text-xs leading-relaxed ${isPro ? "text-slate-600" : "text-slate-300"}`}>
                 {isPro
-                  ? "החשבון שלך נהנה מהתראות עומס חכמות, הוספת סופרים בלתי מוגבלת, ודיווחי קהילה בעדיפות כפולה."
+                  ? `מנוי VIP פעיל · נותרו ${proDaysLeft} ימים לחודש זה (תקף עד ${new Date(proExpiresAt || Date.now()).toLocaleDateString("he-IL")})`
+                  : proExpired
+                  ? "תוקף המנוי החודשי שלך הסתיים. לחידוש המנוי והמשך קבלת התראות ו-VIP, לחץ כאן לחידוש ב-₪9.90."
                   : "קבלו התראות עומס בלייב כשהסופר המועדף מתפנה, הוסיפו סופרים ומכולות חדשות, והשפיעו על הקהילה."}
               </p>
             </div>

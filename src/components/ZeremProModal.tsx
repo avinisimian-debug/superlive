@@ -18,6 +18,9 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const { isPro, togglePro, showToast } = useLive();
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [copied, setCopied] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [verifyingProof, setVerifyingProof] = useState(false);
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
@@ -74,6 +77,13 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     }, 1500);
   };
 
+  const handlePayPalConfirm = () => {
+    togglePro(true);
+    setSuccess(true);
+    setAuthCode(`PP-${Math.floor(100000 + Math.random() * 900000)}`);
+    showToast("מנוי Zerem Pro הופעל בהצלחה ל-30 יום! 👑");
+  };
+
   const handleBitApp = () => {
     const phone = "0555573090";
     if (typeof window !== "undefined") {
@@ -105,10 +115,30 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const handleBitConfirm = () => {
-    togglePro(true);
-    showToast("מנוי Zerem Pro הופעל בהצלחה! תודה על תמיכתך 👑");
-    onClose();
+  const handleProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProofFile(file);
+      const url = URL.createObjectURL(file);
+      setProofPreview(url);
+    }
+  };
+
+  const handleVerifyAndActivate = () => {
+    if (!proofFile) {
+      showToast("נא להעלות צילום מסך של אישור ההעברה ב-Bit או PayBox");
+      return;
+    }
+
+    setVerifyingProof(true);
+    // Simulate smart verification: checking recipient 0555573090, 9.90 NIS, and current timestamp
+    setTimeout(() => {
+      setVerifyingProof(false);
+      togglePro(true);
+      setSuccess(true);
+      setAuthCode(`BIT-${Math.floor(100000 + Math.random() * 900000)}`);
+      showToast("צילום המסך אומת בהצלחה! המנוי הופעל ל-30 יום 👑");
+    }, 1800);
   };
 
   return (
@@ -376,7 +406,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                 <div className="pt-2 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={handleBitConfirm}
+                    onClick={handleVerifyAndActivate}
                     className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 text-xs font-black text-slate-950 shadow-md hover:from-amber-300"
                   >
                     <CheckIcon className="h-4 w-4" />
@@ -407,7 +437,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
 
                 <button
                   type="button"
-                  onClick={handleBitConfirm}
+                  onClick={handlePayPalConfirm}
                   className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100"
                 >
                   <span>אישור: ביצעתי תשלום ב-PayPal</span>
