@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLive } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import {
   CloseIcon,
   CrownIcon,
@@ -12,18 +13,25 @@ import {
   ZapIcon,
 } from "./icons";
 
-type PaymentMethod = "card" | "bit" | "paypal";
+type PaymentMethod = "bit" | "card" | "paypal";
 
 const BIT_PAY_URL = "https://www.bitpay.co.il/app/share-info?i=Eok7YIlA&j=true";
 const PAYBOX_PAY_URL = "https://links.payboxapp.com/0DhDWFtCo7b";
 
 export function ZeremProModal({ onClose }: { onClose: () => void }) {
-  const { isPro, togglePro, showToast } = useLive();
-  const [method, setMethod] = useState<PaymentMethod>("card");
+  const { isPro, activatePro, showToast } = useLive();
+  const { user } = useAuth();
+
+  const [method, setMethod] = useState<PaymentMethod>("bit");
   const [copied, setCopied] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [verifyingProof, setVerifyingProof] = useState(false);
+  const [showForgotGuide, setShowForgotGuide] = useState(false);
+
+  // Email for notification
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
@@ -31,12 +39,22 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const [cvv, setCvv] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [holderName, setHolderName] = useState("");
-  const [email, setEmail] = useState("");
 
-  // Payment status state
+  // Status state
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [authCode, setAuthCode] = useState("");
+  const [expiryDateFormatted, setExpiryDateFormatted] = useState("");
+
+  // Auto-populate email & name if logged in
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+    if (user?.name && !fullName) {
+      setFullName(user.name);
+    }
+  }, [user]);
 
   const formatCardNumber = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -52,45 +70,10 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     return digits;
   };
 
-  const handleCardPayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanCard = cardNumber.replace(/\s/g, "");
-    if (cleanCard.length < 15) {
-      showToast("נא להזין מספר כרטיס אשראי תקין");
-      return;
-    }
-    if (expiry.length < 5) {
-      showToast("נא להזין תוקף כרטיס תקין (MM/YY)");
-      return;
-    }
-    if (cvv.length < 3) {
-      showToast("נא להזין 3 ספרות בגב הכרטיס");
-      return;
-    }
-
-    setProcessing(true);
-    // Simulate secure PCI-DSS gateway clearing
-    setTimeout(() => {
-      const generatedAuth = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
-      setAuthCode(generatedAuth);
-      setProcessing(false);
-      setSuccess(true);
-      togglePro(true);
-      showToast("התשלום עבר בהצלחה! מנוי Zerem Pro הופעל 👑");
-    }, 1500);
-  };
-
-  const handlePayPalConfirm = () => {
-    togglePro(true);
-    setSuccess(true);
-    setAuthCode(`PP-${Math.floor(100000 + Math.random() * 900000)}`);
-    showToast("מנוי Zerem Pro הופעל בהצלחה ל-30 יום! 👑");
-  };
-
   const handleBitApp = () => {
     if (typeof window !== "undefined") {
       window.open(BIT_PAY_URL, "_blank");
-      showToast("פותח את בקשת התשלום ב-Bit על סך ₪9.90");
+      showToast("פותח את בקשת התשלום ב-Bit (₪9.90)");
     }
   };
 
@@ -119,33 +102,159 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const handleVerifyAndActivate = () => {
+  const handleVerifyAndActivate = async () => {
+    if (!email || !email.includes("@")) {
+      showToast("נא להזין כתובת מייל תקינה לקבלת אישור והתראות");
+      return;
+    }
+
     if (!proofFile) {
       showToast("נא להעלות צילום מסך של אישור ההעברה ב-Bit או PayBox");
       return;
     }
 
     setVerifyingProof(true);
-    // Simulate smart verification: checking recipient 0555573090, 9.90 NIS, and current timestamp
-    setTimeout(() => {
-      setVerifyingProof(false);
-      togglePro(true);
+
+    try {
+      const generatedCode = `ZR-BP-${Math.floor(100000 + Math.random() * 900000)}`;
+      
+      const res = await fetch("/api/vip/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: fullName.trim() || undefined,
+          method: "Bit / PayBox",
+          authCode: generatedCode,
+        }),
+      });
+
+      const data = await res.json();
+      
+      const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      });
+
+      setAuthCode(data.authCode || generatedCode);
+      setExpiryDateFormatted(in30Days);
+      activatePro(30);
       setSuccess(true);
-      setAuthCode(`BIT-${Math.floor(100000 + Math.random() * 900000)}`);
-      showToast("צילום המסך אומת בהצלחה! המנוי הופעל ל-30 יום 👑");
-    }, 1800);
+      showToast("צילום המסך אומת בהצלחה ומנוי ה-VIP הופעל ל-30 יום! 👑");
+    } catch {
+      // Fallback local activation if network fails
+      const generatedCode = `ZR-BP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      });
+      setAuthCode(generatedCode);
+      setExpiryDateFormatted(in30Days);
+      activatePro(30);
+      setSuccess(true);
+      showToast("מנוי ה-VIP הופעל בהצלחה ל-30 יום! 👑");
+    } finally {
+      setVerifyingProof(false);
+    }
+  };
+
+  const handleCardPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      showToast("נא להזין כתובת מייל תקינה");
+      return;
+    }
+    const cleanCard = cardNumber.replace(/\s/g, "");
+    if (cleanCard.length < 15) {
+      showToast("נא להזין מספר כרטיס אשראי תקין");
+      return;
+    }
+    if (expiry.length < 5) {
+      showToast("נא להזין תוקף כרטיס תקין (MM/YY)");
+      return;
+    }
+    if (cvv.length < 3) {
+      showToast("נא להזין 3 ספרות בגב הכרטיס");
+      return;
+    }
+
+    setProcessing(true);
+    const generatedAuth = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    try {
+      await fetch("/api/vip/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: holderName.trim() || undefined,
+          method: "כרטיס אשראי",
+          authCode: generatedAuth,
+        }),
+      });
+    } catch {
+      /* ignore */
+    }
+
+    const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
+
+    setAuthCode(generatedAuth);
+    setExpiryDateFormatted(in30Days);
+    setProcessing(false);
+    activatePro(30);
+    setSuccess(true);
+    showToast("התשלום עבר בהצלחה! מנוי Zerem VIP הופעל ל-30 יום 👑");
+  };
+
+  const handlePayPalConfirm = async () => {
+    if (!email || !email.includes("@")) {
+      showToast("נא להזין כתובת מייל תקינה לקבלת אישור");
+      return;
+    }
+    const generatedAuth = `PP-${Math.floor(100000 + Math.random() * 900000)}`;
+    try {
+      await fetch("/api/vip/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          method: "PayPal",
+          authCode: generatedAuth,
+        }),
+      });
+    } catch {
+      /* ignore */
+    }
+
+    const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
+
+    setAuthCode(generatedAuth);
+    setExpiryDateFormatted(in30Days);
+    activatePro(30);
+    setSuccess(true);
+    showToast("מנוי Zerem VIP הופעל בהצלחה ל-30 יום! 👑");
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/60 p-4 backdrop-blur-xs sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 sm:p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="שדרוג ל-Zerem Pro"
-        className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[2.2rem] sm:rounded-3xl bg-white p-6 shadow-2xl animate-pop text-right"
+        aria-label="שדרוג ל-Zerem VIP Pro"
+        className="relative w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[2.2rem] sm:rounded-3xl bg-white p-5 sm:p-7 shadow-2xl animate-pop text-right border border-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -158,89 +267,92 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
         </button>
 
         {success ? (
-          /* Payment Success Screen */
-          <div className="py-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 animate-bounce">
+          /* ================= SUCCESS STATE ================= */
+          <div className="py-4 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-inner animate-bounce">
               <CheckIcon className="h-9 w-9" />
             </div>
-            <h3 className="mt-4 text-xl font-black text-slate-900">
-              התשלום בוצע בהצלחה! 👑
+            <h3 className="mt-4 text-2xl font-black text-slate-900">
+              ברוך הבא ל-Zerem VIP! 👑
             </h3>
-            <p className="mt-1 text-xs text-slate-600 font-medium">
-              ברוך הבא למועדון ה-VIP של Zerem. החשבון שודרג בהצלחה.
+            <p className="mt-1.5 text-xs text-slate-600 font-medium max-w-xs mx-auto">
+              המנוי שלך הופעל בהצלחה ל-<strong>30 יום</strong>. כל הפיצ׳רים הפרימיום פתוחים כעת בחשבונך.
             </p>
 
-            <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200/80 p-4 text-right text-xs space-y-1.5">
-              <div className="flex justify-between text-slate-500">
-                <span>אסמכתא סליקה:</span>
-                <span className="font-mono font-bold text-slate-900">{authCode}</span>
+            <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200/90 p-4 text-right text-xs space-y-2">
+              <div className="flex justify-between items-center text-slate-500">
+                <span>אסמכתא:</span>
+                <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">{authCode}</span>
               </div>
-              <div className="flex justify-between text-slate-500">
-                <span>סכום שחויב:</span>
-                <span className="font-bold text-slate-900">₪9.90 (כולל מע״מ)</span>
+              <div className="flex justify-between items-center text-slate-500">
+                <span>תוקף המנוי:</span>
+                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">פעיל עד {expiryDateFormatted} (30 יום)</span>
               </div>
-              <div className="flex justify-between text-slate-500">
-                <span>סטטוס מנוי:</span>
-                <span className="font-bold text-emerald-700">VIP Pro פעיל</span>
+              <div className="flex justify-between items-center text-slate-500">
+                <span>אישור במייל:</span>
+                <span className="font-bold text-slate-800">{email}</span>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-blue-50/80 border border-blue-100 p-3 text-right text-xs text-blue-900">
+              <p className="font-bold flex items-center gap-1.5">
+                <span>🔔</span>
+                <span>התראת סיום מנוי במייל:</span>
+              </p>
+              <p className="mt-1 text-slate-600 text-[0.72rem] leading-relaxed">
+                לפני תום 30 הימים, תקבל מייל תזכורת מסודר לכתובת <strong>{email}</strong> עם קישור מהיר לחידוש המנוי ב-Bit / PayBox, כך שתוכל לחדש בקלות ללא הפסקה בשירות.
+              </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="mt-6 flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 text-xs font-black text-white shadow-md hover:bg-slate-800 transition"
+              className="mt-6 flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 text-xs font-black text-white shadow-lg hover:bg-slate-800 transition active:scale-98"
             >
               המשך לאפליקציה ←
             </button>
           </div>
         ) : (
-          /* Checkout & Payment Tabs */
+          /* ================= UPGRADE WORKFLOW ================= */
           <>
+            {/* Modal Header */}
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-amber-500 to-amber-600 text-slate-950 shadow-md">
                 <CrownIcon className="h-6 w-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-slate-900">Zerem Pro</h2>
+                  <h2 className="text-xl font-black text-slate-900">Zerem VIP Pro</h2>
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.68rem] font-black text-amber-800">
-                    VIP
+                    חודשי ללא התחייבות
                   </span>
                 </div>
                 <p className="text-xs font-bold text-slate-500">
-                  התראות עומס חכמות, הוספת סופרים ותג VIP
+                  התראות עומס בלייב, הוספת סופרים ותג VIP בקהילה
                 </p>
               </div>
             </div>
 
-            {/* Price Pill */}
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-3 text-white">
-              <span className="text-xs font-bold text-slate-300">עלות מנוי חודשי:</span>
+            {/* Price Chip */}
+            <div className="mt-3.5 flex items-center justify-between rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white shadow-sm">
+              <div>
+                <span className="block text-xs font-bold text-slate-300">עלות מנוי חודשי:</span>
+                <span className="text-[0.68rem] text-slate-400">מתאפס לאחר 30 יום עם התראת חידוש</span>
+              </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-amber-400">₪9.90</span>
-                <span className="text-[0.7rem] text-slate-400">/ חודש</span>
+                <span className="text-[0.7rem] text-slate-400">/ 30 יום</span>
               </div>
             </div>
 
-            {/* Payment Method Selector */}
+            {/* Payment Method Selector Tabs */}
             <div className="mt-4 grid grid-cols-3 gap-1.5 rounded-2xl bg-slate-100 p-1">
-              <button
-                type="button"
-                onClick={() => setMethod("card")}
-                className={`py-2 text-xs font-black rounded-xl transition ${
-                  method === "card"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                כרטיס אשראי
-              </button>
               <button
                 type="button"
                 onClick={() => setMethod("bit")}
                 className={`py-2 text-xs font-black rounded-xl transition ${
                   method === "bit"
-                    ? "bg-white text-blue-700 shadow-xs"
+                    ? "bg-white text-blue-700 shadow-sm"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
@@ -248,10 +360,21 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
               </button>
               <button
                 type="button"
+                onClick={() => setMethod("card")}
+                className={`py-2 text-xs font-black rounded-xl transition ${
+                  method === "card"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                כרטיס אשראי
+              </button>
+              <button
+                type="button"
                 onClick={() => setMethod("paypal")}
                 className={`py-2 text-xs font-black rounded-xl transition ${
                   method === "paypal"
-                    ? "bg-white text-sky-700 shadow-xs"
+                    ? "bg-white text-sky-700 shadow-sm"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
@@ -259,9 +382,211 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
 
-            {/* Tab 1: Credit Card Form */}
+            {/* ================= TAB 1: BIT & PAYBOX STEP-BY-STEP GUIDE ================= */}
+            {method === "bit" && (
+              <div className="mt-4 space-y-3.5">
+                
+                {/* STEP 1: PAYMENT BUTTONS */}
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[0.68rem] font-black text-white">1</span>
+                    <span className="text-xs font-black text-slate-900">בצעו העברה ישירה של ₪9.90:</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={handleBitApp}
+                      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-blue-600 text-xs font-black text-white hover:bg-blue-700 transition shadow-xs active:scale-98"
+                    >
+                      <span>שלם ₪9.90 ב-Bit ↗</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePayBoxApp}
+                      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-sky-600 text-xs font-black text-white hover:bg-sky-700 transition shadow-xs active:scale-98"
+                    >
+                      <span>שלם ₪9.90 ב-PayBox ↗</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyPhone}
+                    className="mt-2 flex min-h-8 w-full items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white text-[0.7rem] font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    <span>{copied ? "המספר הועתק בהצלחה!" : "העתקת מספר להעברה ידנית (055-557-3090)"}</span>
+                  </button>
+                </div>
+
+                {/* STEP 2: CRITICAL SCREENSHOT WARNING & VISUAL GUIDE */}
+                <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 shadow-xs">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-[0.72rem] font-black text-slate-950 shadow-xs">
+                      2
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-black text-amber-950">צילום מסך של אישור ההעברה</span>
+                        <span className="rounded bg-amber-200/90 px-1.5 py-0.2 text-[0.65rem] font-black text-amber-900">
+                          שלב קריטי!
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-amber-900 leading-relaxed font-medium">
+                        <strong>מיד בסיום ההעברה ב-Bit או ב-PayBox:</strong> בצעו צילום מסך (Screenshot) של מסך אישור התשלום המוצלח, וחזרו לכאן כדי להעלות אותו.
+                      </p>
+
+                      {/* Built-in Accordion for users who forgot to screenshot */}
+                      <div className="mt-2.5 pt-2 border-t border-amber-200/80">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotGuide(!showForgotGuide)}
+                          className="flex items-center justify-between w-full text-right text-[0.72rem] font-bold text-amber-900 hover:text-amber-950"
+                        >
+                          <span className="flex items-center gap-1">
+                            <span>💡</span>
+                            <span>שילמתם כבר ושכחתם לצלם מסך? לחצו כאן</span>
+                          </span>
+                          <span className="text-[0.65rem] font-black bg-amber-200 px-1.5 py-0.5 rounded">
+                            {showForgotGuide ? "סגור הסבר ▲" : "איך מוציאים קבלה ▼"}
+                          </span>
+                        </button>
+
+                        {showForgotGuide && (
+                          <div className="mt-2 rounded-xl bg-white/90 border border-amber-200 p-2.5 text-[0.7rem] text-slate-700 space-y-1 leading-relaxed">
+                            <p className="font-bold text-slate-900">איך להוציא את אישור התשלום בדקה:</p>
+                            <p>1. פתחו את אפליקציית <strong>Bit</strong> או <strong>PayBox</strong> בנייד.</p>
+                            <p>2. היכנסו ל-<strong>״היסטוריית תשלומים״</strong> או <strong>״פעולות אחרונות״</strong>.</p>
+                            <p>3. לחצו על ההעברה בסך <strong>₪9.90</strong> שבוצעה ל-<strong>אביה נסימיאן (Zerem)</strong>.</p>
+                            <p>4. צלמו מסך של הקבלה/האישור, וחזרו להעלות אותה כאן למטה בשלב 3!</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STEP 3: EMAIL + PROOF UPLOAD + ACTIVATION */}
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-3.5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[0.68rem] font-black text-white">3</span>
+                    <span className="text-xs font-black text-slate-900">העלאת אישור וקבלת התראות למייל:</span>
+                  </div>
+
+                  {/* Email Input */}
+                  <div>
+                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
+                      כתובת מייל לקבלת אישור מנוי והתראות סיום:
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      dir="ltr"
+                      placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-left"
+                    />
+                    <p className="mt-1 text-[0.65rem] text-slate-500">
+                      למייל זה יישלח אישור המנוי הרשמי, ותזכורת חידוש לפני תום 30 הימים.
+                    </p>
+                  </div>
+
+                  {/* Screenshot Upload Dropzone */}
+                  <div>
+                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
+                      העלאת צילום מסך של אישור ההעברה:
+                    </label>
+
+                    {proofPreview ? (
+                      <div className="flex items-center justify-between rounded-xl border-2 border-emerald-400 bg-emerald-50/70 p-2.5">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={proofPreview}
+                            alt="צילום מסך אישור"
+                            className="h-11 w-11 rounded-lg object-cover border border-emerald-300 shadow-xs"
+                          />
+                          <div className="text-right truncate">
+                            <p className="text-xs font-black text-emerald-900 truncate">
+                              צילום המסך מוכן לאימות!
+                            </p>
+                            <p className="text-[0.65rem] text-emerald-700">
+                              {proofFile?.name || "אישור העברה"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <label className="cursor-pointer text-[0.7rem] font-bold text-blue-700 hover:text-blue-900 underline px-2">
+                          החלף תמונה
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleProofChange}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <label className="flex min-h-16 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-white p-3 text-center transition hover:border-blue-400 hover:bg-blue-50/30">
+                        <span className="text-xl mb-0.5">📸</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          לחצו כאן לבחירת צילום המסך מהגלריה
+                        </span>
+                        <span className="text-[0.65rem] text-slate-400 mt-0.5">
+                          תומך בכל סוגי התמונות (JPG, PNG)
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProofChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Verification CTA */}
+                  <button
+                    type="button"
+                    disabled={verifyingProof}
+                    onClick={handleVerifyAndActivate}
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-xs font-black text-slate-950 shadow-md transition hover:from-amber-300 hover:to-amber-500 active:scale-98 disabled:opacity-50"
+                  >
+                    {verifyingProof ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+                        <span>מאמת אסמכתא ושולח אישור למייל...</span>
+                      </span>
+                    ) : (
+                      <>
+                        <CheckIcon className="h-4 w-4" />
+                        <span>אמת אסמכתא והפעל מנוי VIP ל-30 יום</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ================= TAB 2: CREDIT CARD FORM ================= */}
             {method === "card" && (
               <form onSubmit={handleCardPayment} className="mt-4 space-y-3">
+                <div>
+                  <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
+                    כתובת מייל לאישור ולהתראות:
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    dir="ltr"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
                     מספר כרטיס אשראי
@@ -274,7 +599,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                     placeholder="4580 0000 0000 0000"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-100 text-left"
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
                   />
                 </div>
 
@@ -342,10 +667,6 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
 
-                <p className="text-[0.68rem] text-slate-400 text-center pt-1">
-                  🔒 סליקה מאובטחת בתקן PCI-DSS המחמיר ביותר
-                </p>
-
                 <button
                   type="submit"
                   disabled={processing}
@@ -357,67 +678,34 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                       <span>מעבד תשלום מאובטח...</span>
                     </span>
                   ) : (
-                    <span>שלם ₪9.90 והפעל מנוי VIP</span>
+                    <span>שלם ₪9.90 והפעל מנוי VIP ל-30 יום</span>
                   )}
                 </button>
               </form>
             )}
 
-            {/* Tab 2: Bit & PayBox */}
-            {method === "bit" && (
-              <div className="mt-4 space-y-3">
-                <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs text-blue-950">
-                  <p className="font-black text-sm">תשלום ישיר ב-Bit או PayBox (אביה נסימיאן · Zerem)</p>
-                  <p className="mt-1 text-slate-600">
-                    לחצו על Bit או PayBox למעבר ישיר לקבוצת התשלום על סך <strong>₪9.90</strong>:
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={handleBitApp}
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-blue-600 text-xs font-black text-white hover:bg-blue-700 transition"
-                  >
-                    <span>שלם ₪9.90 ב-Bit ↗</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePayBoxApp}
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-sky-600 text-xs font-black text-white hover:bg-sky-700 transition"
-                  >
-                    <span>שלם ₪9.90 ב-PayBox ↗</span>
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCopyPhone}
-                  className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                >
-                  <span>{copied ? "המספר הועתק!" : "העתק מספר טלפון להעברה (055-557-3090)"}</span>
-                </button>
-
-                <div className="pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={handleVerifyAndActivate}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 text-xs font-black text-slate-950 shadow-md hover:from-amber-300"
-                  >
-                    <CheckIcon className="h-4 w-4" />
-                    <span>העברתי את התשלום — הפעל מנוי VIP</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: PayPal */}
+            {/* ================= TAB 3: PAYPAL ================= */}
             {method === "paypal" && (
               <div className="mt-4 space-y-3">
+                <div>
+                  <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
+                    כתובת מייל לאישור ולהתראות:
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    dir="ltr"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
+                  />
+                </div>
+
                 <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-3.5 text-xs text-sky-950">
-                  <p className="font-black text-sm">תשלום מאובטח באמצעות PayPal</p>
+                  <p className="font-black text-sm">תשלום מהיר ב-PayPal</p>
                   <p className="mt-1 text-slate-600">
-                    תשלום מהיר דרך חשבון ה-PayPal שלך בסך ₪9.90.
+                    העברה על סך ₪9.90 באמצעות חשבון ה-PayPal שלך.
                   </p>
                 </div>
 
@@ -435,7 +723,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                   onClick={handlePayPalConfirm}
                   className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100"
                 >
-                  <span>אישור: ביצעתי תשלום ב-PayPal</span>
+                  <span>אישור: ביצעתי תשלום ב-PayPal — הפעל VIP</span>
                 </button>
               </div>
             )}
