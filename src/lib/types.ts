@@ -117,6 +117,8 @@ export interface AdminStats {
   totalUsers: number;
   loginsToday: number;
   totalReports: number;
+  landingViews?: number;
+  apkDownloads?: number;
 }
 
 export interface AdminOverview {

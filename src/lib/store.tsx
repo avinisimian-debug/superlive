@@ -22,8 +22,18 @@ import type {
 
 const REPORTS_KEY = "superlive.reports.v1";
 const LOCATION_KEY = "superlive.location.v1";
+const FAVORITES_KEY = "zerem.favorites.v1";
+const MY_REPORTS_KEY = "zerem.my_reports.v1";
 
 type ReportsMap = Record<string, Report[]>;
+
+export interface MyReportItem {
+  branchId: string;
+  branchName: string;
+  congestion: Congestion;
+  parking: Parking;
+  at: number;
+}
 
 interface LiveContextValue {
   ready: boolean;
@@ -42,6 +52,10 @@ interface LiveContextValue {
   totalSubmissions: number;
   toast: string | null;
   showToast: (message: string) => void;
+  favorites: string[];
+  toggleFavorite: (branchId: string) => void;
+  isFavorite: (branchId: string) => boolean;
+  myReports: MyReportItem[];
 }
 
 const LiveContext = createContext<LiveContextValue | null>(null);
@@ -78,6 +92,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const [reports, setReports] = useState<ReportsMap>(() =>
     loadJson<ReportsMap>(REPORTS_KEY, {}),
   );
+  const [myReports, setMyReports] = useState<MyReportItem[]>(() =>
+    loadJson<MyReportItem[]>(MY_REPORTS_KEY, []),
+  );
+  const [favorites, setFavorites] = useState<string[]>(() =>
+    loadJson<string[]>(FAVORITES_KEY, []),
+  );
   const [location, setLocation] = useState<UserLocation>(() =>
     loadJson<UserLocation>(LOCATION_KEY, DEFAULT_LOCATION),
   );
@@ -100,9 +120,27 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(REPORTS_KEY, JSON.stringify(reports));
     } catch {
-      /* storage may be unavailable (private mode) — ignore */
+      /* ignore */
     }
   }, [reports, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    } catch {
+      /* ignore */
+    }
+  }, [favorites, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      window.localStorage.setItem(MY_REPORTS_KEY, JSON.stringify(myReports));
+    } catch {
+      /* ignore */
+    }
+  }, [myReports, ready]);
 
   const persistLocation = useCallback((loc: UserLocation) => {
     setLocation(loc);
@@ -141,6 +179,20 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     );
   }, [persistLocation]);
 
+  const toggleFavorite = useCallback((branchId: string) => {
+    setFavorites((prev) => {
+      const exists = prev.includes(branchId);
+      const next = exists ? prev.filter((id) => id !== branchId) : [...prev, branchId];
+      setToast(exists ? "הסניף הוסר מהמועדפים" : "הסניף נשמר במועדפים ⭐");
+      return next;
+    });
+  }, []);
+
+  const isFavorite = useCallback(
+    (branchId: string) => favorites.includes(branchId),
+    [favorites],
+  );
+
   const submitReport = useCallback(
     (branch: Branch, congestion: Congestion, parking: Parking) => {
       const report: Report = {
@@ -151,14 +203,22 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       };
       setReports((prev) => {
         const existing = prev[branch.id] ?? [];
-        // Keep the log bounded to the recent window.
         const next = [report, ...existing].slice(0, 40);
         return { ...prev, [branch.id]: next };
       });
+      setMyReports((prev) => [
+        {
+          branchId: branch.id,
+          branchName: branch.name,
+          congestion,
+          parking,
+          at: Date.now(),
+        },
+        ...prev.slice(0, 20),
+      ]);
       setNow(Date.now());
       setToast("תודה! הדיווח עודכן בלייב 🙌");
 
-      // Persist the report server-side (best-effort, non-blocking).
       void fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,13 +229,12 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
           parking,
         }),
       }).catch(() => {
-        /* offline / server error — local report still applies */
+        /* ignore */
       });
     },
     [],
   );
 
-  // Auto-dismiss toast.
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 3200);
@@ -210,6 +269,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
       totalSubmissions,
       toast,
       showToast: setToast,
+      favorites,
+      toggleFavorite,
+      isFavorite,
+      myReports,
     };
   }, [
     ready,
@@ -221,6 +284,10 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     locate,
     submitReport,
     toast,
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    myReports,
   ]);
 
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>;

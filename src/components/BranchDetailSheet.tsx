@@ -12,6 +12,7 @@ import {
 import { minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
 import { CHAIN_COLORS } from "@/lib/chain-colors";
 import { formatDistance } from "@/lib/geo";
+import { useLive } from "@/lib/store";
 import {
   CarIcon,
   ChartIcon,
@@ -22,6 +23,7 @@ import {
   SparkIcon,
   UsersIcon,
   WazeIcon,
+  StarIcon,
 } from "./icons";
 
 const HOUR_TICKS = [8, 10, 12, 14, 16, 18, 20, 22];
@@ -114,7 +116,9 @@ export function BranchDetailSheet({
     branch.wazeQuery ??
       `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
   );
-  const wazeHref = `https://waze.com/ul?q=${wazeQuery}&ll=${branch.lat},${branch.lng}&navigate=yes`;
+  const { isFavorite, toggleFavorite } = useLive();
+  const favorite = isFavorite(branch.id);
+  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&navigate=yes`;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

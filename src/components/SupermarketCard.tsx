@@ -4,7 +4,8 @@ import type { Branch, Congestion, LiveState } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_SHORT } from "@/lib/live";
 import { formatDistance } from "@/lib/geo";
 import { isOpenAt } from "@/lib/schedules";
-import { CarIcon, MapPinIcon, UsersIcon, WazeIcon } from "./icons";
+import { useLive } from "@/lib/store";
+import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon } from "./icons";
 
 const CONGESTION_DOT: Record<Congestion, string> = {
   free: "bg-emerald-500",
@@ -33,17 +34,17 @@ export function SupermarketCard({
   onReport: (branch: Branch) => void;
   onOpen: (branch: Branch) => void;
 }) {
+  const { isFavorite, toggleFavorite } = useLive();
   const open = isOpenAt(branch.scheduleIdx, new Date(now));
-  const wazeQuery = encodeURIComponent(
-    branch.wazeQuery ??
-      `${branch.name} ${branch.address ? branch.address + " " : ""}${branch.city}`,
-  );
-  const wazeHref = `https://waze.com/ul?q=${wazeQuery}&ll=${branch.lat},${branch.lng}&navigate=yes`;
+  const favorite = isFavorite(branch.id);
+
+  // Direct GPS coordinates route in Waze for 100% pinpoint navigation accuracy.
+  const wazeHref = `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&navigate=yes`;
 
   return (
     <article className="animate-card relative rounded-2xl border border-slate-100 bg-white p-4 shadow-card transition-shadow duration-300 hover:shadow-lift">
       {/* Whole-card tap target → opens the full detail sheet. Sits above the
-          static content but below the Waze / report buttons. */}
+          static content but below the Waze / report / favorite buttons. */}
       <button
         type="button"
         onClick={() => onOpen(branch)}
@@ -52,9 +53,9 @@ export function SupermarketCard({
         className="absolute inset-0 z-10 rounded-2xl outline-none transition focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500/40"
       />
 
-      {/* Line 1 — chain, branch name, city + open status */}
+      {/* Line 1 — chain, branch name, city + open status + favorite button */}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[0.7rem] font-semibold tracking-wide text-slate-400">
             {branch.chain}
           </p>
@@ -66,19 +67,36 @@ export function SupermarketCard({
           </span>
         </div>
 
-        <span
-          className={`inline-flex shrink-0 items-center gap-1.5 text-[0.7rem] font-semibold ${
-            open ? "text-slate-600" : "text-slate-400"
-          }`}
-        >
+        <div className="relative z-20 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(branch.id);
+            }}
+            aria-label={favorite ? "הסר מהמועדפים" : "הוסף למועדפים"}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 active:scale-90"
+          >
+            <StarIcon
+              filled={favorite}
+              className={`h-4 w-4 ${favorite ? "text-amber-400" : "text-slate-300 hover:text-slate-500"}`}
+            />
+          </button>
+
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              open ? "bg-emerald-500" : "bg-slate-300"
+            className={`inline-flex shrink-0 items-center gap-1.5 text-[0.7rem] font-semibold ${
+              open ? "text-slate-600" : "text-slate-400"
             }`}
-            aria-hidden="true"
-          />
-          {open ? "פתוח" : "סגור"}
-        </span>
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                open ? "bg-emerald-500" : "bg-slate-300"
+              }`}
+              aria-hidden="true"
+            />
+            {open ? "פתוח" : "סגור"}
+          </span>
+        </div>
       </div>
 
       {/* Line 2 — single unified status pill */}
@@ -126,7 +144,7 @@ export function SupermarketCard({
           href={wazeHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-50 text-[0.8rem] font-semibold text-slate-700 ring-1 ring-inset ring-slate-200/70 transition active:scale-[0.98]"
+          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-50 text-[0.8rem] font-semibold text-slate-700 ring-1 ring-inset ring-slate-200/70 transition active:scale-[0.98] hover:bg-sky-50 hover:text-sky-700"
         >
           <WazeIcon className="h-4 w-4 text-sky-500" />
           Waze

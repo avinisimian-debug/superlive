@@ -7,6 +7,7 @@ import {
   getPublicUsers,
   getReports,
 } from "@/lib/server/auth-store";
+import { getAnalyticsCounts } from "@/lib/server/analytics-store";
 import type { AdminOverview, AuthUser } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -20,10 +21,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const [storedUsers, activity, reports] = await Promise.all([
+  const [storedUsers, activity, reports, analytics] = await Promise.all([
     getPublicUsers(),
     getActivity(200),
     getReports(),
+    getAnalyticsCounts(),
   ]);
 
   // The owner accounts always appear, even on fresh serverless instances
@@ -51,6 +53,8 @@ export async function GET(req: NextRequest) {
       totalUsers: users.length,
       loginsToday,
       totalReports: reports.length,
+      landingViews: analytics["landing_view"] || 0,
+      apkDownloads: analytics["apk_download"] || 0,
     },
     users: [...users].sort((a, b) =>
       b.lastLoginAt.localeCompare(a.lastLoginAt),
