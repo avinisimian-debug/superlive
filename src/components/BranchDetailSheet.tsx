@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
-import { minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
+import { SCHEDULES, minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
 import { getWazeNavigationUrl } from "@/lib/navigation";
@@ -72,15 +72,31 @@ export function BranchDetailSheet({
   const { isFavorite, toggleFavorite } = useLive();
   const favorite = isFavorite(branch.id);
 
+  const hourTicks = useMemo(() => {
+    const profile = SCHEDULES[branch.scheduleIdx];
+    if (!profile) return [8, 10, 12, 14, 16, 18, 20, 22];
+    let earliest = 480;
+    for (const d of profile.days) {
+      if (d) {
+        for (const [o] of d) {
+          if (o < earliest) earliest = o;
+        }
+      }
+    }
+    if (earliest <= 390) return [6, 8, 10, 12, 14, 16, 18, 20, 22];
+    if (earliest <= 420) return [7, 9, 11, 13, 15, 17, 19, 21];
+    return [8, 10, 12, 14, 16, 18, 20, 22];
+  }, [branch.scheduleIdx]);
+
   const bars = useMemo(
     () =>
-      HOUR_TICKS.map((hour) => {
+      hourTicks.map((hour) => {
         const at = new Date(now);
         at.setHours(hour, 0, 0, 0);
         const load = loadScore(branch, at);
         return { hour, load, congestion: congestionFromLoad(load) };
       }),
-    [branch, now],
+    [branch, now, hourTicks],
   );
 
   const currentHour = date.getHours();
@@ -266,12 +282,14 @@ export function BranchDetailSheet({
                 <ClockIcon className="h-4 w-4 text-sky-600" />
                 שעות פעילות
               </p>
-              <p className="mt-1 text-xs font-bold text-slate-900">
-                {branch.hours || "סניף פתוח בימי חול"}
-              </p>
-              <p className="mt-0.5 text-[0.68rem] text-slate-500">
-                מעודכן לימי חול וערבי חג
-              </p>
+              <div className="mt-2 space-y-1.5">
+                {hours.map((h) => (
+                  <div key={h.key} className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-slate-600">{h.label}</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">{h.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
