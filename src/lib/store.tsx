@@ -270,13 +270,34 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     }
   }, [activatePro]);
 
-  const toggleSmartAlerts = useCallback(() => {
-    setSmartAlerts((prev) => {
-      const next = !prev;
-      setToast(next ? "התראות עומס חכמות הופעלו 🔔" : "התראות עומס חכמות כובו");
-      return next;
-    });
-  }, []);
+  const toggleSmartAlerts = useCallback(async () => {
+    if (!smartAlerts) {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        if (Notification.permission === "default") {
+          try {
+            const res = await Notification.requestPermission();
+            if (res === "granted") {
+              try {
+                new Notification("Zerem VIP · התראות הופעלו 👑", {
+                  body: "נעדכן אותך ברגע שסופר מועדף שלך מתפנה מעומס!",
+                  icon: "/icons/icon-192.png",
+                });
+              } catch {
+                /* ignore */
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+      setSmartAlerts(true);
+      setToast("התראות עומס חכמות הופעלו 🔔");
+    } else {
+      setSmartAlerts(false);
+      setToast("התראות עומס חכמות כובו");
+    }
+  }, [smartAlerts]);
 
   const addCustomBranch = useCallback(
     (input: NewBranchInput): Branch => {

@@ -13,7 +13,7 @@ import {
   ZapIcon,
 } from "./icons";
 
-type PaymentMethod = "bit" | "card" | "paypal";
+type PaymentMethod = "bit" | "paypal";
 
 const BIT_PAY_URL = "https://www.bitpay.co.il/app/share-info?i=Eok7YIlA&j=true";
 const PAYBOX_PAY_URL = "https://links.payboxapp.com/0DhDWFtCo7b";
@@ -34,12 +34,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
 
-  // Card form state
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [idNumber, setIdNumber] = useState("");
-  const [holderName, setHolderName] = useState("");
+
 
   // Status state
   const [processing, setProcessing] = useState(false);
@@ -176,57 +171,6 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const handleCardPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !email.includes("@")) {
-      showToast("נא להזין כתובת מייל תקינה");
-      return;
-    }
-    const cleanCard = cardNumber.replace(/\s/g, "");
-    if (cleanCard.length < 15) {
-      showToast("נא להזין מספר כרטיס אשראי תקין");
-      return;
-    }
-    if (expiry.length < 5) {
-      showToast("נא להזין תוקף כרטיס תקין (MM/YY)");
-      return;
-    }
-    if (cvv.length < 3) {
-      showToast("נא להזין 3 ספרות בגב הכרטיס");
-      return;
-    }
-
-    setProcessing(true);
-    const generatedAuth = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    try {
-      await fetch("/api/vip/activate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          name: holderName.trim() || undefined,
-          method: "כרטיס אשראי",
-          authCode: generatedAuth,
-        }),
-      });
-    } catch {
-      /* ignore */
-    }
-
-    const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
-      day: "numeric",
-      month: "numeric",
-      year: "numeric",
-    });
-
-    setAuthCode(generatedAuth);
-    setExpiryDateFormatted(in30Days);
-    setProcessing(false);
-    activatePro(30);
-    setSuccess(true);
-    showToast("התשלום עבר בהצלחה! מנוי Zerem VIP הופעל ל-30 יום 👑");
-  };
 
   const handlePayPalConfirm = async () => {
     if (!email || !email.includes("@")) {
@@ -362,7 +306,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
             </div>
 
             {/* Payment Method Selector Tabs */}
-            <div className="mt-4 grid grid-cols-3 gap-1.5 rounded-2xl bg-slate-100 p-1">
+            <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-slate-100 p-1">
               <button
                 type="button"
                 onClick={() => setMethod("bit")}
@@ -372,18 +316,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                Bit / PayBox
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethod("card")}
-                className={`py-2 text-xs font-black rounded-xl transition ${
-                  method === "card"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                כרטיס אשראי
+                Bit / PayBox (העברה + אסמכתא)
               </button>
               <button
                 type="button"
@@ -394,7 +327,7 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                PayPal
+                PayPal (תשלום מיידי)
               </button>
             </div>
 
@@ -598,121 +531,6 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* ================= TAB 2: CREDIT CARD FORM ================= */}
-            {method === "card" && (
-              <form onSubmit={handleCardPayment} className="mt-4 space-y-3">
-                <div>
-                  <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                    כתובת מייל לאישור ולהתראות:
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    dir="ltr"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                    מספר כרטיס אשראי
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    inputMode="numeric"
-                    dir="ltr"
-                    placeholder="4580 0000 0000 0000"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                      תוקף (MM/YY)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      dir="ltr"
-                      placeholder="12/28"
-                      value={expiry}
-                      onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-center"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                      3 ספרות (CVV)
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      inputMode="numeric"
-                      maxLength={4}
-                      dir="ltr"
-                      placeholder="•••"
-                      value={cvv}
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-center"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                      תעודת זהות
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={9}
-                      dir="ltr"
-                      placeholder="012345678"
-                      value={idNumber}
-                      onChange={(e) => setIdNumber(e.target.value.replace(/\D/g, ""))}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white text-left"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
-                      שם בעל הכרטיס
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="ישראל ישראלי"
-                      value={holderName}
-                      onChange={(e) => setHolderName(e.target.value)}
-                      className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 text-xs font-black text-slate-950 shadow-md transition hover:from-amber-300 hover:to-amber-400 active:scale-98 disabled:opacity-50"
-                >
-                  {processing ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
-                      <span>מעבד תשלום מאובטח...</span>
-                    </span>
-                  ) : (
-                    <span>שלם ₪9.90 והפעל מנוי VIP ל-30 יום</span>
-                  )}
-                </button>
-              </form>
             )}
 
             {/* ================= TAB 3: PAYPAL ================= */}

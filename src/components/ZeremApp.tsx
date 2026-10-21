@@ -35,8 +35,19 @@ const SORT_LABEL: Record<SortMode, string> = {
 };
 
 export function ZeremApp() {
-  const { ready, now, location, getLive, submitReport, totalSubmissions, favorites, customBranches } =
+  const { ready, now, location, getLive, submitReport, totalSubmissions, favorites, customBranches, isPro, smartAlerts } =
     useLive();
+
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    if (ready) {
+      setSplashFading(true);
+      const timer = setTimeout(() => setSplashVisible(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [ready]);
 
   const [currentTab, setCurrentTab] = useState<AppTab>("feed");
   const [city, setCity] = useState("all");
@@ -65,6 +76,54 @@ export function ZeremApp() {
     for (const branch of allBranches) map.set(branch.id, getLive(branch));
     return map;
   }, [getLive, allBranches]);
+
+  // VIP smart browser notifications when a favorite branch becomes free
+  useEffect(() => {
+    if (!ready || !isPro || !smartAlerts) return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    if (favorites.length === 0) return;
+
+    const notifiedKey = "zerem.last_notified_free.v1";
+    let notifiedMap: Record<string, number> = {};
+    try {
+      notifiedMap = JSON.parse(window.sessionStorage.getItem(notifiedKey) || "{}");
+    } catch {
+      notifiedMap = {};
+    }
+
+    const branchMap = new Map(allBranches.map((b) => [b.id, b]));
+    let updated = false;
+
+    for (const favId of favorites) {
+      const branch = branchMap.get(favId);
+      if (!branch) continue;
+      const live = liveById.get(favId);
+      if (live && live.congestion === "free") {
+        const last = notifiedMap[favId] || 0;
+        if (now - last > 30 * 60 * 1000) {
+          notifiedMap[favId] = now;
+          updated = true;
+          try {
+            new Notification(`הסופר התפנה! 🛒`, {
+              body: `${branch.name} ב${branch.city} פנוי עכשיו ללא תור בקופות.`,
+              icon: "/icons/icon-192.png",
+            });
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    }
+
+    if (updated) {
+      try {
+        window.sessionStorage.setItem(notifiedKey, JSON.stringify(notifiedMap));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [ready, isPro, smartAlerts, favorites, liveById, now, allBranches]);
 
   // Determine branch pool: all branches for "feed", only favorited branches for "favorites"
   const pool = useMemo(() => {
@@ -192,6 +251,7 @@ export function ZeremApp() {
 
   return (
     <>
+      {splashVisible && <SplashScreen fading={splashFading} />}
       <Header
         totalBranches={NATIONWIDE_COUNT}
         cityCount={CITIES.length}
@@ -330,18 +390,48 @@ export function ZeremApp() {
   );
 }
 
-function LoadingState() {
+function SplashScreen({ fading }: { fading: boolean }) {
   return (
-    <div className="px-4 pt-4" aria-busy="true">
-      <div className="h-[6.5rem] rounded-3xl bg-slate-200/70 animate-pulse" />
-      <div className="mt-3 space-y-3">
-        {[0, 1, 2].map((row) => (
-          <div key={row} className="h-[11.5rem] rounded-3xl bg-slate-200/70 animate-pulse" />
-        ))}
+    <div
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#090d16] text-white select-none transition-opacity duration-400 ${
+        fading ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
+      aria-label="מסך פתיחה של זרם"
+    >
+      <div className="flex flex-col items-center px-6 text-center">
+        {/* Glowing Ambient Aura & Authentic Logo */}
+        <div className="relative flex items-center justify-center">
+          <div className="absolute h-36 w-36 rounded-full bg-cyan-400/20 blur-2xl animate-pulse" />
+          <img
+            src="/logo.png"
+            alt="זרם"
+            className="relative h-24 w-24 rounded-3xl object-cover shadow-2xl ring-1 ring-cyan-400/30"
+          />
+        </div>
+
+        <div className="mt-6 flex items-center gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-white">זרם</h1>
+          <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
+        </div>
+
+        <p className="mt-1 text-xs font-bold text-cyan-400/90 tracking-wider">
+          עומסים וחניה בסופר בלייב
+        </p>
+
+        {/* Smooth modern progress bar */}
+        <div className="mt-8 flex flex-col items-center gap-2.5">
+          <div className="h-1.5 w-44 overflow-hidden rounded-full bg-slate-800">
+            <div className="h-full w-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 animate-pulse" />
+          </div>
+          <span className="text-[0.72rem] text-slate-400 font-medium">
+            טוען 3,449 סניפים ועומסי קהילה...
+          </span>
+        </div>
       </div>
-      <p className="mt-6 text-center text-xs font-bold text-sky-600">
-        טוען סופרמרקטים ועומסי תנועה…
-      </p>
     </div>
   );
+}
+
+function LoadingState() {
+  return <div className="min-h-[50vh]" aria-hidden="true" />;
 }

@@ -11,33 +11,14 @@ const base = {
   strokeLinejoin: "round" as const,
 };
 
-export function LogoMark({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+export function LogoMark({ className, alt = "זרם", ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
-    <svg
-      viewBox="0 0 512 512"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`rounded-2xl shrink-0 ${className ?? "h-9 w-9"}`}
-      aria-label="Zerem"
+    <img
+      src="/logo.png"
+      alt={alt}
+      className={`rounded-2xl object-cover shrink-0 select-none shadow-xs ${className ?? "h-9 w-9"}`}
       {...props}
-    >
-      <rect width="512" height="512" rx="112" fill="#090d16" />
-      <rect width="510" height="510" x="1" y="1" rx="111" stroke="#1e293b" strokeWidth="2" />
-      <circle cx="256" cy="256" r="170" stroke="#00e5ff" strokeOpacity="0.12" strokeWidth="2" strokeDasharray="6 6" />
-      <path
-        d="M148 160 C148 153.373 153.373 148 160 148 L352 148 C360.837 148 368 155.163 368 164 L368 184 C368 192.837 360.837 200 352 200 L228 200 L356.5 316.5 C363.8 323.1 368 332.5 368 342.3 L368 352 C368 360.837 360.837 368 352 368 L160 368 C153.373 368 148 362.627 148 356 L148 336 C148 327.163 155.163 320 164 320 L288 320 L159.5 203.5 C152.2 196.9 148 187.5 148 177.7 Z"
-        fill="url(#zeremLogoGrad)"
-      />
-      <circle cx="368" cy="148" r="14" fill="#00e5ff" />
-      <circle cx="368" cy="148" r="6" fill="#ffffff" />
-      <defs>
-        <linearGradient id="zeremLogoGrad" x1="148" y1="148" x2="368" y2="368" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#00e5ff" />
-          <stop offset="50%" stopColor="#00a8ff" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-      </defs>
-    </svg>
+    />
   );
 }
 
