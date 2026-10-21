@@ -1,11 +1,12 @@
 "use client";
 
 import { ChainLogo } from "./ChainLogo";
+import { DataIssueReport } from "./DataIssueReport";
 
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
-import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
-import { SCHEDULES, minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
+import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, loadScore } from "@/lib/live";
+import { SCHEDULES, isOpenAt, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
 import { getWazeNavigationUrl } from "@/lib/navigation";
@@ -67,9 +68,11 @@ export function BranchDetailSheet({
 }) {
   const [copied, setCopied] = useState(false);
   const date = useMemo(() => new Date(now), [now]);
-  const status = useMemo(() => openStatus(branch.scheduleIdx, date), [branch.scheduleIdx, date]);
+  const status = useMemo(
+    () => openStatus(branch.scheduleIdx, date, !branch.hoursVerified),
+    [branch.scheduleIdx, branch.hoursVerified, date],
+  );
   const hours = useMemo(() => weeklyHours(branch.scheduleIdx), [branch.scheduleIdx]);
-  const reports = useMemo(() => communityReports(branch, now), [branch, now]);
   const chainMeta = getChainMeta(branch.chain);
   const { isFavorite, toggleFavorite } = useLive();
   const favorite = isFavorite(branch.id);
@@ -102,10 +105,16 @@ export function BranchDetailSheet({
   );
 
   const currentHour = date.getHours();
+  // Only recommend hours when the branch is expected to be open.
   const quietestHour = useMemo(() => {
-    if (!bars.length) return null;
-    return [...bars].sort((a, b) => a.load - b.load)[0];
-  }, [bars]);
+    const openBars = bars.filter(({ hour }) => {
+      const at = new Date(now);
+      at.setHours(hour, 0, 0, 0);
+      return isOpenAt(branch.scheduleIdx, at);
+    });
+    if (!openBars.length) return null;
+    return [...openBars].sort((a, b) => a.load - b.load)[0];
+  }, [bars, now, branch.scheduleIdx]);
 
   const wazeHref = getWazeNavigationUrl(branch);
 
@@ -175,8 +184,13 @@ export function BranchDetailSheet({
                 {branch.name}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 truncate">
-                {branch.address}
+                {branch.address || branch.city}
               </p>
+              {branch.locationTrust === "unverified" && (
+                <p className="mt-1 text-[0.68rem] font-semibold text-amber-800">
+                  מיקום הסניף עדיין לא אומת. אם הגעת למקום אחר, נשמח לדיווח.
+                </p>
+              )}
             </div>
           </div>
 
@@ -214,9 +228,9 @@ export function BranchDetailSheet({
           <div className={`rounded-3xl border border-slate-200/80 p-4 ${cong.bg}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={`h-3 w-3 rounded-full ${cong.dot} animate-pulse`} />
+                <span className={`h-3 w-3 rounded-full ${cong.dot} ${live.estimated ? "opacity-60" : "animate-pulse"}`} />
                 <span className={`text-sm font-black ${cong.text}`}>
-                  {cong.label}
+                  {live.estimated ? `צפוי: ${CONGESTION_LABEL[live.congestion]}` : cong.label}
                 </span>
               </div>
               <span className={`text-xs font-bold ${status.open ? "text-emerald-700" : "text-rose-700"}`}>
@@ -224,18 +238,24 @@ export function BranchDetailSheet({
               </span>
             </div>
 
+            <p className="mt-1.5 text-[0.7rem] font-semibold text-slate-600">
+              {live.estimated || live.lastReportAt === null
+                ? "אין דיווח עדכני. ההערכה מבוססת על השעה והיום בשבוע."
+                : `לפי ${live.reportCount === 1 ? "דיווח אחד" : `${live.reportCount} דיווחים`} מהקהילה, האחרון ${minutesAgoLabel(live.lastReportAt, now)}.`}
+            </p>
+
             {/* Smart Quiet Hours Recommendation */}
             {quietestHour && (
               <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/90 p-2.5 text-xs text-slate-800 font-bold border border-slate-100">
                 <ZapIcon className="h-4 w-4 text-amber-500 shrink-0" />
-                <span>שעה מומלצת להגעה היום: סביב {quietestHour.hour}:00 (ללא תור וחניה בשפע)</span>
+                <span>השעה הצפויה להיות הכי שקטה היום: סביב {quietestHour.hour}:00</span>
               </div>
             )}
 
             {/* Hourly congestion graph */}
             <div className="mt-4 pt-3 border-t border-slate-200/60">
               <p className="text-[0.72rem] font-bold text-slate-600 mb-2">
-                תחזית עומסים לפי שעות היום:
+                עומס צפוי לפי שעות היום (הערכה):
               </p>
               <div className="flex items-end justify-between gap-1.5 h-20 pt-1">
                 {bars.map(({ hour, load, congestion }) => {
@@ -280,8 +300,13 @@ export function BranchDetailSheet({
             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
               <p className="flex items-center gap-1.5 text-xs font-black text-slate-800">
                 <ClockIcon className="h-4 w-4 text-sky-600" />
-                שעות פעילות
+                {branch.hoursVerified ? "שעות פעילות" : "שעות פעילות משוערות"}
               </p>
+              {!branch.hoursVerified && (
+                <p className="mt-1 rounded-xl bg-amber-50 px-2 py-1 text-[0.68rem] font-semibold leading-snug text-amber-900">
+                  לפי השעות הנפוצות ברשת, לא אומתו מול הסניף. כדאי לוודא לפני שיוצאים, במיוחד בערב חג.
+                </p>
+              )}
               <div className="mt-2 space-y-1.5">
                 {hours.map((h) => (
                   <div key={h.key} className="flex items-center justify-between text-xs">
@@ -292,6 +317,10 @@ export function BranchDetailSheet({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="px-5 pb-4">
+          <DataIssueReport branch={branch} />
         </div>
 
         {/* Sticky Action Footer */}

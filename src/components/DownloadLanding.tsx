@@ -30,8 +30,6 @@ import { ZeremProModal } from "./ZeremProModal";
 import { LoginModal } from "./LoginModal";
 import { AuthButton } from "./AuthButton";
 
-const TOTAL_BRANCHES = "3,449";
-const TOTAL_CITIES = "1,174";
 
 const FEATURES: {
   title: string;
@@ -58,8 +56,8 @@ const FEATURES: {
     tint: "from-amber-500 to-orange-500",
   },
   {
-    title: "3,449 סופרים ומכולות",
-    body: "כיסוי ארצי הרמטי בכל עיר, מושב וקיבוץ בישראל — שופרסל, רמי לוי, יוחננוף, אושר עד, קרפור ומכולות שכונתיות.",
+    title: "סופרים בכל הארץ",
+    body: "שופרסל, רמי לוי, יוחננוף, אושר עד, קרפור ועוד. מציגים רק סניפים שהמיקום שלהם עבר בדיקה, כדי שהניווט יוביל למקום הנכון.",
     icon: MapPinIcon,
     tint: "from-emerald-500 to-teal-500",
   },
@@ -178,7 +176,16 @@ const TESTIMONIALS = [
   },
 ];
 
-export function DownloadLanding() {
+export function DownloadLanding({
+  branchCount,
+  cityCount,
+}: {
+  /** Listed branches (only those that passed the location checks). */
+  branchCount: number;
+  cityCount: number;
+}) {
+  const TOTAL_BRANCHES = branchCount.toLocaleString("en-US");
+  const TOTAL_CITIES = cityCount.toLocaleString("en-US");
   const [iosOpen, setIosOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
@@ -242,7 +249,7 @@ export function DownloadLanding() {
       <div className="bg-gradient-to-r from-slate-950 via-sky-950 to-slate-950 px-4 py-2 text-center text-xs font-bold text-sky-200">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>עכשיו באוויר: מעקב עומסים חי ב-3,449 סופרמרקטים ומכולות בישראל</span>
+          <span>עכשיו באוויר: מעקב עומסים ב-{TOTAL_BRANCHES} סופרמרקטים ומכולות בישראל</span>
         </span>
       </div>
 
@@ -310,7 +317,7 @@ export function DownloadLanding() {
 
             {/* Subtitle */}
             <p className="mt-4 text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
-              האפליקציה הקהילתית של ישראל למעקב עומסי קופות, זמינות חניה ושעות שקטות מומלצות ב-3,449 סופרמרקטים ומכולות — עם ניווט ישיר ב-Waze.
+              האפליקציה הקהילתית של ישראל למעקב עומסי קופות, זמינות חניה ושעות שקטות מומלצות ב-{TOTAL_BRANCHES} סופרמרקטים ומכולות — עם ניווט ישיר ב-Waze.
             </p>
 
             {/* CTAs */}
@@ -361,11 +368,11 @@ export function DownloadLanding() {
             {/* Verified Facts & Coverage */}
             <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto pt-6 border-t border-slate-200/60">
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
-                <p className="text-xl font-black text-sky-600 tabular-nums">3,449</p>
+                <p className="text-xl font-black text-sky-600 tabular-nums">{TOTAL_BRANCHES}</p>
                 <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">סניפים בפריסה ארצית</p>
               </div>
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
-                <p className="text-xl font-black text-emerald-600 tabular-nums">1,174</p>
+                <p className="text-xl font-black text-emerald-600 tabular-nums">{TOTAL_CITIES}</p>
                 <p className="text-[0.68rem] font-bold text-slate-500 mt-0.5">יישובים מקצה לקצה</p>
               </div>
               <div className="rounded-2xl bg-white p-3 border border-slate-200/70 shadow-2xs">
@@ -473,7 +480,7 @@ export function DownloadLanding() {
                   href="/"
                   className="min-h-11 inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-50"
                 >
-                  לכל 3,449 הסניפים ←
+                  לכל {TOTAL_BRANCHES} הסניפים ←
                 </Link>
               </div>
             </div>
@@ -553,7 +560,7 @@ export function DownloadLanding() {
                 <ul className="mt-6 space-y-2.5 text-xs text-slate-300">
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>חיפוש וסינון בכל 3,449 הסופרמרקטים</span>
+                    <span>חיפוש וסינון בכל {TOTAL_BRANCHES} הסופרמרקטים</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon className="h-4 w-4 text-emerald-400 shrink-0" />

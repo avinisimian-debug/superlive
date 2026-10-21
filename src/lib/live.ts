@@ -32,7 +32,6 @@ export const PARKING_SHORT: Record<Parking, string> = {
 };
 
 const FRESH_WINDOW_MS = 90 * 60 * 1000;
-const SIM_BUCKET_MS = 5 * 60 * 1000;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -45,18 +44,6 @@ function hash(input: string): number {
     h = Math.imul(h, 16777619);
   }
   return h >>> 0;
-}
-
-/** Deterministic tiny PRNG (xorshift) so simulated crowds are stable. */
-function makeRng(seed: number): () => number {
-  let s = seed >>> 0 || 1;
-  return () => {
-    s ^= s << 13;
-    s ^= s >>> 17;
-    s ^= s << 5;
-    s >>>= 0;
-    return s / 4294967296;
-  };
 }
 
 const SIZE_FACTOR: Record<Branch["size"], number> = {
@@ -169,31 +156,6 @@ function parkingFromLoad(load: number, jitter: number): Parking {
   if (score < 0.4) return "plenty";
   if (score < 0.66) return "partial";
   return "none";
-}
-
-/**
- * Simulated community reports for a branch. Regenerated every few minutes so
- * the feed always feels alive, while remaining deterministic per time bucket.
- */
-export function communityReports(branch: Branch, now: number): Report[] {
-  const bucket = Math.floor(now / SIM_BUCKET_MS);
-  const rng = makeRng(hash(branch.id) ^ bucket);
-  const load = loadScore(branch, new Date(now));
-  const count = 1 + Math.floor(rng() * 4); // 1–4 reports in window
-  const out: Report[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const ageMin = 1.5 + rng() * 8.5;
-    const c = congestionFromLoad(clamp(load + (rng() - 0.5) * 0.3, 0, 1));
-    const p = parkingFromLoad(load, rng());
-    out.push({
-      congestion: c,
-      parking: p,
-      at: now - ageMin * 60 * 1000,
-      source: "community",
-    });
-  }
-  return out;
 }
 
 function weightedPick<T extends string>(

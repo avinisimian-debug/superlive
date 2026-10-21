@@ -8,6 +8,38 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const idsParam = searchParams.get("ids");
 
+  // ?recent=1 → every branch with a community report in the last 90 minutes.
+  if (searchParams.get("recent") === "1") {
+    await initDbSchema();
+    const sql = getDb();
+    if (!sql) return NextResponse.json({ success: true, statuses: {} });
+    try {
+      const rows = await sql`
+        SELECT branch_id, congestion, parking, report_count, last_report_at
+        FROM zerem_branch_status
+        WHERE last_report_at > now() - interval '90 minutes'
+        ORDER BY last_report_at DESC
+        LIMIT 2000
+      `;
+      const statuses: Record<string, unknown> = {};
+      for (const r of rows as any[]) {
+        statuses[r.branch_id] = {
+          congestion: r.congestion,
+          parking: r.parking,
+          reportCount: r.report_count,
+          lastReportAt: r.last_report_at,
+        };
+      }
+      return NextResponse.json(
+        { success: true, statuses },
+        { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=30" } },
+      );
+    } catch (err: any) {
+      console.error("[crowd/status recent] Error:", err);
+      return NextResponse.json({ success: false, error: "status_unavailable" }, { status: 500 });
+    }
+  }
+
   if (!idsParam) {
     return NextResponse.json(
       { success: false, error: "נדרש פרמטר ids עם רשימת סניפים מופרדת בפסיקים" },

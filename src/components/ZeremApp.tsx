@@ -99,14 +99,15 @@ export function ZeremApp() {
       const branch = branchMap.get(favId);
       if (!branch) continue;
       const live = liveById.get(favId);
-      if (live && live.congestion === "free") {
+      // Only alert on a real recent report, never on the time-of-day estimate.
+      if (live && !live.estimated && live.congestion === "free") {
         const last = notifiedMap[favId] || 0;
         if (now - last > 30 * 60 * 1000) {
           notifiedMap[favId] = now;
           updated = true;
           try {
             new Notification(`הסופר התפנה! 🛒`, {
-              body: `${branch.name} ב${branch.city} פנוי עכשיו ללא תור בקופות.`,
+              body: `לפי דיווח עדכני, ${branch.name} ב${branch.city} פנוי עכשיו.`,
               icon: "/icons/icon-192.png",
             });
           } catch {
@@ -146,8 +147,9 @@ export function ZeremApp() {
       }
       if (tokens.length) {
         // Fast index check
-        const idx = BRANCHES.indexOf(branch);
-        const hay = idx >= 0 ? SEARCH_INDEX[idx] : `${branch.name} ${branch.chain} ${branch.city} ${branch.address}`.toLowerCase();
+        const hay =
+          SEARCH_INDEX.get(branch.id) ??
+          `${branch.name} ${branch.chain} ${branch.city} ${branch.address}`.toLowerCase();
         for (const token of tokens) {
           if (!hay.includes(token)) return false;
         }
@@ -337,8 +339,8 @@ export function ZeremApp() {
                 : "כל דיווח עוזר לעוד ישראלים לתכנן את הקנייה."}
             </p>
             <p className="mt-1 text-slate-300">
-              {NATIONWIDE_COUNT} סניפים ב-{CITIES.length} ערים, לפי נתוני OpenStreetMap
-              ודיווחי קהילה בזמן אמת.
+              {NATIONWIDE_COUNT} סניפים ב-{CITIES.length} ערים, לפי נתוני OpenStreetMap.
+              העומס מבוסס על דיווחי קהילה, ובלי דיווח עדכני מוצגת הערכה לפי שעה ויום.
             </p>
           </footer>
         ) : null}
@@ -424,7 +426,7 @@ function SplashScreen({ fading }: { fading: boolean }) {
             <div className="h-full w-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 animate-pulse" />
           </div>
           <span className="text-[0.72rem] text-slate-400 font-medium">
-            טוען 3,449 סניפים ועומסי קהילה...
+            טוען {NATIONWIDE_COUNT.toLocaleString("en-US")} סניפים ועומסי קהילה...
           </span>
         </div>
       </div>

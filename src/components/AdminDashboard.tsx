@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { AdminDataQueue } from "./AdminDataQueue";
 import type { AdminOverview, ActivityEvent, UserRole } from "@/lib/types";
 import {
   LogoMark,
@@ -317,6 +318,8 @@ export function AdminDashboard() {
             </ul>
           </section>
         </div>
+
+        <AdminDataQueue />
       </main>
     </div>
   );

@@ -60,6 +60,13 @@ export interface Branch {
   size: BranchSize;
   /** Optional exact Waze search string (overrides the auto-generated one). */
   wazeQuery?: string;
+  /**
+   * true only when the opening hours were confirmed for this specific branch.
+   * Otherwise `scheduleIdx` is a chain-typical estimate and must be shown as one.
+   */
+  hoursVerified?: boolean;
+  /** How far the map pin can be trusted (see data-quality.ts). */
+  locationTrust?: "verified" | "consistent" | "unverified";
   isCustom?: boolean;
   addedBy?: string;
 }

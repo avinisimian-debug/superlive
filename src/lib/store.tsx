@@ -9,7 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { communityReports, effectiveState } from "./live";
+import { effectiveState } from "./live";
 import { DEFAULT_LOCATION } from "./geo";
 import type {
   Branch,
@@ -147,6 +147,33 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // Real community reports from every user, refreshed every minute.
+  const [communityReports, setCommunityReports] = useState<Record<string, Report>>({});
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      fetch("/api/crowd/status?recent=1", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: { statuses?: Record<string, { congestion: Congestion; parking: Parking; lastReportAt: string | null }> } | null) => {
+          if (!active || !data?.statuses) return;
+          const next: Record<string, Report> = {};
+          for (const [id, s] of Object.entries(data.statuses)) {
+            if (!s.lastReportAt) continue;
+            next[id] = { congestion: s.congestion, parking: s.parking, at: Date.parse(s.lastReportAt), source: "community" };
+          }
+          setCommunityReports(next);
+        })
+        .catch(() => {
+          /* offline: keep the last known reports */
+        });
+    void load();
+    const id = window.setInterval(load, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -375,7 +402,8 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<LiveContextValue>(() => {
     const getLive = (branch: Branch): LiveState => {
       const user = reports[branch.id] ?? [];
-      const merged = [...user, ...communityReports(branch, now)];
+      const community = communityReports[branch.id];
+      const merged = community ? [...user, community] : user;
       return effectiveState(branch, merged, now);
     };
 
@@ -419,6 +447,7 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     ready,
     now,
     reports,
+    communityReports,
     location,
     locating,
     usingGps,

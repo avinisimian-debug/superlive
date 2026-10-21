@@ -11,31 +11,28 @@ export function isValidCoordinates(lat: number, lng: number): boolean {
 }
 
 /**
- * Generates an accurate, physical destination URL for Waze.
- * 
- * CRITICAL FIX:
- * In Waze deep links, passing BOTH `ll` and `q` causes Waze to execute a free-text search for `q`,
- * completely overriding the GPS coordinates and leading drivers to incorrect branches in other cities.
- * To ensure 100% navigation accuracy to the physical parking lot/store, we route strictly by `ll`
- * coordinates, unless an explicit human-verified `wazeQuery` override exists for this specific venue.
+ * Waze deep link that drives to the branch itself.
+ *
+ * Passing both `ll` and `q` makes Waze run a free-text search for `q` and
+ * ignore the pin, which can land in another city. So we navigate by the pin
+ * alone, unless a human-checked `wazeQuery` exists for this exact venue.
+ * Branches whose pin fails the location checks never reach this function:
+ * they are held back in branches.ts.
  */
 export function getWazeNavigationUrl(branch: Branch): string {
-  // Explicit destination override for Mevo Horon to ensure drivers never land in Nof Ayalon
-  if (branch.id === "b-3449" || branch.name.includes("מבוא חורון") || (branch.city === "מבוא חורון" && branch.chain.includes("מכולת"))) {
-    return `https://www.waze.com/ul?q=${encodeURIComponent("צרכניית מבוא חורון")}&navigate=yes`;
+  const override = branch.wazeQuery?.trim();
+  if (override) {
+    return `https://www.waze.com/ul?q=${encodeURIComponent(override)}&navigate=yes`;
   }
 
   if (!isValidCoordinates(branch.lat, branch.lng)) {
-    // If coordinates are somehow missing, fall back to explicit address search
-    const fallbackQuery = encodeURIComponent(`${branch.chain} ${branch.city} ${branch.address || branch.name}`);
+    // Only user-added branches can get here; search by the full address instead.
+    const fallbackQuery = encodeURIComponent(
+      [branch.chain, branch.address || branch.name, branch.city].filter(Boolean).join(" "),
+    );
     return `https://www.waze.com/ul?q=${fallbackQuery}&navigate=yes`;
   }
 
-  if (branch.wazeQuery && branch.wazeQuery.trim().length > 0) {
-    return `https://www.waze.com/ul?q=${encodeURIComponent(branch.wazeQuery.trim())}&navigate=yes`;
-  }
-
-  // Exact physical GPS pin turn-by-turn navigation
   return `https://www.waze.com/ul?ll=${branch.lat}%2C${branch.lng}&navigate=yes`;
 }
 

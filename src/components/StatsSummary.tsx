@@ -10,7 +10,7 @@ export interface StatsCounts {
 }
 
 const ITEMS: { key: Congestion; label: string; dot: string; textColor: string; bg: string }[] = [
-  { key: "free", label: "פנויים כעת", dot: "bg-emerald-500", textColor: "text-emerald-700", bg: "bg-emerald-50" },
+  { key: "free", label: "פנויים", dot: "bg-emerald-500", textColor: "text-emerald-700", bg: "bg-emerald-50" },
   { key: "medium", label: "עומס בינוני", dot: "bg-amber-500", textColor: "text-amber-800", bg: "bg-amber-50" },
   { key: "heavy", label: "עמוסים", dot: "bg-rose-500", textColor: "text-rose-700", bg: "bg-rose-50" },
 ];
@@ -24,13 +24,13 @@ export function StatsSummary({
 }) {
   return (
     <section
-      aria-label="סיכום מצב בזמן אמת"
+      aria-label="סיכום עומסים"
       className="mx-4 mt-3 rounded-3xl border border-slate-200/80 bg-white p-3.5 shadow-card"
     >
       <div className="mb-2 flex items-center justify-between px-1">
         <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
           <CartIcon className="h-4 w-4 text-sky-600" />
-          מצב קופות בזמן אמת
+          עומס בקופות: דיווחים והערכות
         </p>
         <span className="text-xs font-bold text-slate-500 tabular-nums">
           {total.toLocaleString("he-IL")} סניפים

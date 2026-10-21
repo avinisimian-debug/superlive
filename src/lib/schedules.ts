@@ -114,10 +114,16 @@ export interface OpenStatus {
   text: string;
 }
 
-/** Rich open/closed label with the next closing or opening time. */
-export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
+/**
+ * Rich open/closed label with the next closing or opening time. Pass
+ * `estimated` when the schedule is a chain-typical guess rather than this
+ * branch's confirmed hours, so the label never states a guess as fact.
+ */
+export function openStatus(scheduleIdx: number, date: Date, estimated = false): OpenStatus {
+  const openWord = estimated ? "כנראה פתוח" : "פתוח עכשיו";
+  const closedWord = estimated ? "כנראה סגור" : "סגור";
   const profile = SCHEDULES[scheduleIdx];
-  if (!profile) return { open: true, text: "פתוח 24/7" };
+  if (!profile) return { open: true, text: estimated ? "שעות לא ידועות" : "פתוח 24/7" };
   const minutes = date.getHours() * 60 + date.getMinutes();
   const today = profile.days[date.getDay()];
 
@@ -125,7 +131,7 @@ export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
   if (current) {
     return {
       open: true,
-      text: `פתוח עכשיו · נסגר ב-${minutesToLabel(current[1])}`,
+      text: `${openWord} · נסגר ב-${minutesToLabel(current[1])}`,
     };
   }
 
@@ -133,7 +139,7 @@ export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
   if (laterToday) {
     return {
       open: false,
-      text: `סגור · נפתח היום ב-${minutesToLabel(laterToday[0])}`,
+      text: `${closedWord} · נפתח היום ב-${minutesToLabel(laterToday[0])}`,
     };
   }
 
@@ -142,14 +148,14 @@ export function openStatus(scheduleIdx: number, date: Date): OpenStatus {
     const slots = profile.days[day];
     if (slots && slots.length > 0) {
       const first = minutesToLabel(slots[0][0]);
-      if (i === 1) return { open: false, text: `סגור · נפתח מחר ב-${first}` };
+      if (i === 1) return { open: false, text: `${closedWord} · נפתח מחר ב-${first}` };
       return {
         open: false,
-        text: `סגור · נפתח ביום ${DAY_NAMES[day]} ב-${first}`,
+        text: `${closedWord} · נפתח ביום ${DAY_NAMES[day]} ב-${first}`,
       };
     }
   }
-  return { open: false, text: "סגור" };
+  return { open: false, text: closedWord };
 }
 
 /** Short "closing soon / opens at" hint, or null when not applicable. */
