@@ -403,7 +403,7 @@ function SplashScreen({ fading }: { fading: boolean }) {
         <div className="relative flex items-center justify-center">
           <div className="absolute h-36 w-36 rounded-full bg-cyan-400/20 blur-2xl animate-pulse" />
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="זרם"
             className="relative h-24 w-24 rounded-3xl object-cover shadow-2xl ring-1 ring-cyan-400/30"
           />
