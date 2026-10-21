@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DownloadLanding } from "@/components/DownloadLanding";
+import { CITIES, NATIONWIDE_COUNT } from "@/lib/branches";
 
 export const metadata: Metadata = {
   title: "Zerem (זרם) | לדעת מתי הסופר פנוי — עוד לפני שיוצאים מהבית",
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function LandingPage() {
-  return <DownloadLanding />;
+  return <DownloadLanding branchCount={NATIONWIDE_COUNT} cityCount={CITIES.length} />;
 }

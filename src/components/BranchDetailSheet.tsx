@@ -1,11 +1,12 @@
 "use client";
 
 import { ChainLogo } from "./ChainLogo";
+import { DataIssueReport } from "./DataIssueReport";
 
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
-import { SCHEDULES, minutesToLabel, openStatus, weeklyHours } from "@/lib/schedules";
+import { SCHEDULES, isOpenAt, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
 import { getWazeNavigationUrl } from "@/lib/navigation";
@@ -67,7 +68,10 @@ export function BranchDetailSheet({
 }) {
   const [copied, setCopied] = useState(false);
   const date = useMemo(() => new Date(now), [now]);
-  const status = useMemo(() => openStatus(branch.scheduleIdx, date), [branch.scheduleIdx, date]);
+  const status = useMemo(
+    () => openStatus(branch.scheduleIdx, date, !branch.hoursVerified),
+    [branch.scheduleIdx, branch.hoursVerified, date],
+  );
   const hours = useMemo(() => weeklyHours(branch.scheduleIdx), [branch.scheduleIdx]);
   const reports = useMemo(() => communityReports(branch, now), [branch, now]);
   const chainMeta = getChainMeta(branch.chain);
@@ -102,10 +106,16 @@ export function BranchDetailSheet({
   );
 
   const currentHour = date.getHours();
+  // Only recommend hours when the branch is expected to be open.
   const quietestHour = useMemo(() => {
-    if (!bars.length) return null;
-    return [...bars].sort((a, b) => a.load - b.load)[0];
-  }, [bars]);
+    const openBars = bars.filter(({ hour }) => {
+      const at = new Date(now);
+      at.setHours(hour, 0, 0, 0);
+      return isOpenAt(branch.scheduleIdx, at);
+    });
+    if (!openBars.length) return null;
+    return [...openBars].sort((a, b) => a.load - b.load)[0];
+  }, [bars, now, branch.scheduleIdx]);
 
   const wazeHref = getWazeNavigationUrl(branch);
 
@@ -175,8 +185,13 @@ export function BranchDetailSheet({
                 {branch.name}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 truncate">
-                {branch.address}
+                {branch.address || branch.city}
               </p>
+              {branch.locationTrust === "unverified" && (
+                <p className="mt-1 text-[0.68rem] font-semibold text-amber-800">
+                  מיקום הסניף עדיין לא אומת. אם הגעת למקום אחר, נשמח לדיווח.
+                </p>
+              )}
             </div>
           </div>
 
@@ -280,8 +295,13 @@ export function BranchDetailSheet({
             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
               <p className="flex items-center gap-1.5 text-xs font-black text-slate-800">
                 <ClockIcon className="h-4 w-4 text-sky-600" />
-                שעות פעילות
+                {branch.hoursVerified ? "שעות פעילות" : "שעות פעילות משוערות"}
               </p>
+              {!branch.hoursVerified && (
+                <p className="mt-1 rounded-xl bg-amber-50 px-2 py-1 text-[0.68rem] font-semibold leading-snug text-amber-900">
+                  לפי השעות הנפוצות ברשת, לא אומתו מול הסניף. כדאי לוודא לפני שיוצאים, במיוחד בערב חג.
+                </p>
+              )}
               <div className="mt-2 space-y-1.5">
                 {hours.map((h) => (
                   <div key={h.key} className="flex items-center justify-between text-xs">
@@ -292,6 +312,10 @@ export function BranchDetailSheet({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="px-5 pb-4">
+          <DataIssueReport branch={branch} />
         </div>
 
         {/* Sticky Action Footer */}

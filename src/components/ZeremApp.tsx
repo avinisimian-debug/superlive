@@ -146,8 +146,9 @@ export function ZeremApp() {
       }
       if (tokens.length) {
         // Fast index check
-        const idx = BRANCHES.indexOf(branch);
-        const hay = idx >= 0 ? SEARCH_INDEX[idx] : `${branch.name} ${branch.chain} ${branch.city} ${branch.address}`.toLowerCase();
+        const hay =
+          SEARCH_INDEX.get(branch.id) ??
+          `${branch.name} ${branch.chain} ${branch.city} ${branch.address}`.toLowerCase();
         for (const token of tokens) {
           if (!hay.includes(token)) return false;
         }
@@ -424,7 +425,7 @@ function SplashScreen({ fading }: { fading: boolean }) {
             <div className="h-full w-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 animate-pulse" />
           </div>
           <span className="text-[0.72rem] text-slate-400 font-medium">
-            טוען 3,449 סניפים ועומסי קהילה...
+            טוען {NATIONWIDE_COUNT.toLocaleString("en-US")} סניפים ועומסי קהילה...
           </span>
         </div>
       </div>

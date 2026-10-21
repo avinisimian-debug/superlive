@@ -77,7 +77,7 @@ export function SupermarketCard({
 }) {
   const { isFavorite, toggleFavorite } = useLive();
   const date = new Date(now);
-  const status = openStatus(branch.scheduleIdx, date);
+  const status = openStatus(branch.scheduleIdx, date, !branch.hoursVerified);
   const favorite = isFavorite(branch.id);
   const congestion = CONGESTION_CONFIG[live.congestion];
   const chainMeta = getChainMeta(branch.chain);
@@ -184,7 +184,7 @@ export function SupermarketCard({
               {formatDistance(distance)}
             </span>
           ) : (
-            <span>{branch.hours || "סניף פעיל"}</span>
+            <span>{branch.hoursVerified ? branch.hours : "שעות משוערות"}</span>
           )}
         </div>
 

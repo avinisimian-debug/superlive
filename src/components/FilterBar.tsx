@@ -75,7 +75,7 @@ export function FilterBar({
         <Toggle
           active={openNow}
           onClick={() => onOpenNow(!openNow)}
-          label="פתוח עכשיו"
+          label="כנראה פתוח עכשיו"
           icon={<ClockIcon className="h-3.5 w-3.5" />}
         />
         <Toggle
