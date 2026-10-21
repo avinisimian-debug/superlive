@@ -9,9 +9,22 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * travels with the browser in a cookie — zero shared-disk dependencies.
  */
 
-const SECRET =
-  process.env.AUTH_SECRET ||
-  "zerem-static-auth-secret-v1-change-me-by-setting-AUTH_SECRET";
+const DEV_SECRET = "zerem-static-auth-secret-v1-change-me-by-setting-AUTH_SECRET";
+
+/**
+ * True when tokens are signed with a real secret. The fallback is public (it is
+ * in this file), so anyone could forge a session with it; callers must not
+ * grant admin rights unless this is true in production.
+ */
+export const HAS_REAL_SECRET = Boolean(process.env.AUTH_SECRET);
+
+if (!HAS_REAL_SECRET && process.env.NODE_ENV === "production") {
+  console.error(
+    "[auth] AUTH_SECRET is not set. Sessions use a public fallback key and admin access is disabled until it is set.",
+  );
+}
+
+const SECRET = process.env.AUTH_SECRET || DEV_SECRET;
 
 function hmac(data: string): string {
   return createHmac("sha256", SECRET).update(data).digest("base64url");

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createWorker } from "tesseract.js";
+import { createHash } from "node:crypto";
 import { parseAndVerifyProofText } from "@/lib/verify-proof";
+import { signToken } from "@/lib/server/auth-token";
 
 export const runtime = "nodejs";
 
@@ -42,6 +44,13 @@ export async function POST(req: Request) {
       recipient: verification.recipient,
       amount: verification.amount,
       extractedText: extractedText.slice(0, 300),
+      // Short-lived signed receipt that /api/vip/activate requires, so a
+      // subscription cannot be activated without passing this check.
+      proofToken: signToken({
+        kind: "vip-proof",
+        proofHash: createHash("sha256").update(buffer).digest("hex"),
+        exp: Date.now() + 15 * 60 * 1000,
+      }),
     });
   } catch (err: any) {
     console.error("[verify-proof] Error:", err);

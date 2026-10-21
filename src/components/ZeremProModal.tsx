@@ -147,10 +147,17 @@ export function ZeremProModal({ onClose }: { onClose: () => void }) {
           name: fullName.trim() || undefined,
           method: "Bit / PayBox",
           authCode: generatedCode,
+          proofToken: verifyData.proofToken,
         }),
       });
 
       const data = await res.json();
+      if (!res.ok || !data.success) {
+        const reason = data.error || "ההפעלה נכשלה. נא לנסות שוב.";
+        setVerificationError(reason);
+        showToast(reason);
+        return;
+      }
 
       const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("he-IL", {
         day: "numeric",

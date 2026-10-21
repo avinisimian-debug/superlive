@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import type { AuthUser } from "@/lib/types";
 import { SESSION_COOKIE } from "./auth-store";
-import { verifyToken } from "./auth-token";
+import { HAS_REAL_SECRET, verifyToken } from "./auth-token";
 
 interface SessionPayload {
   id?: string;
@@ -29,7 +29,12 @@ export async function currentUser(req: NextRequest): Promise<AuthUser | null> {
     id: payload.id,
     email: payload.email,
     name: payload.name || undefined,
-    role: payload.role === "admin" ? "admin" : "user",
+    // A token signed with the public fallback key could be forged, so it
+    // never carries admin rights in production.
+    role:
+      payload.role === "admin" && (HAS_REAL_SECRET || process.env.NODE_ENV !== "production")
+        ? "admin"
+        : "user",
     createdAt: payload.createdAt || new Date().toISOString(),
     lastLoginAt: payload.lastLoginAt || new Date().toISOString(),
   };
