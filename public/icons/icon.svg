@@ -1,79 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Zerem</title>
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#064e3b" />
-      <stop offset="45%" stop-color="#047857" />
-      <stop offset="100%" stop-color="#0f172a" />
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C2FF"/>
+      <stop offset="1" stop-color="#0057D9"/>
     </linearGradient>
-
-    <!-- Top Highlight Sheen -->
-    <linearGradient id="sheenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.03" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    <linearGradient id="bars" x1="0" y1="176" x2="0" y2="276" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0073EA"/>
+      <stop offset="1" stop-color="#0057D9"/>
     </linearGradient>
-
-    <!-- Z Icon Main Flow Gradient -->
-    <linearGradient id="zGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6ee7b7" />
-      <stop offset="35%" stop-color="#34d399" />
-      <stop offset="70%" stop-color="#10b981" />
-      <stop offset="100%" stop-color="#06b6d4" />
-    </linearGradient>
-
-    <!-- Electric Accent Gradient -->
-    <linearGradient id="electricGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="50%" stop-color="#a7f3d0" />
-      <stop offset="100%" stop-color="#38bdf8" />
-    </linearGradient>
-
-    <!-- Radial Glow Behind Z -->
-    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#10b981" stop-opacity="0.5" />
-      <stop offset="60%" stop-color="#047857" stop-opacity="0.15" />
-      <stop offset="100%" stop-color="#047857" stop-opacity="0" />
-    </radialGradient>
-
-    <!-- Drop Shadow for 3D Mark -->
-    <filter id="markShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#022c22" flood-opacity="0.65" />
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.4" />
-    </filter>
-
-    <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-
-  <!-- Base Squircle / App Container -->
-  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgGrad)" />
-
-  <!-- Ambient Glow Center -->
-  <circle cx="256" cy="256" r="190" fill="url(#centerGlow)" />
-
-  <!-- Glass Border Stroke -->
-  <rect x="18" y="18" width="476" height="476" rx="110" fill="none" stroke="url(#sheenGrad)" stroke-width="4" />
-
-  <!-- Inner Specular Arc -->
-  <path d="M 24 128 C 24 64, 64 24, 128 24 L 384 24 C 448 24, 488 64, 488 128 C 488 140, 24 200, 24 128 Z" fill="url(#sheenGrad)" opacity="0.4" />
-
-  <!-- Dynamic Geometric Z Emblem (Stream of Energy & Flow) -->
-  <g filter="url(#markShadow)">
-    <!-- Top Stream Segment -->
-    <path d="M 148 164 C 148 148, 160 136, 176 136 L 344 136 C 362 136, 372 152, 364 168 L 324 228 C 318 238, 306 244, 294 244 L 204 244 C 188 244, 178 232, 184 220 L 212 180 L 176 180 C 160 180, 148 172, 148 164 Z" fill="url(#zGrad)" />
-
-    <!-- Dynamic Diagonal Lightning / Energy Beam -->
-    <path d="M 356 168 L 176 348 C 166 358, 172 376, 186 376 L 336 376 C 352 376, 364 364, 364 348 C 364 332, 352 320, 336 320 L 254 320 L 372 202 C 384 190, 374 168, 356 168 Z" fill="url(#electricGrad)" />
-
-    <!-- Central Flow Intersect Accent -->
-    <path d="M 224 248 L 288 248 C 298 248, 306 256, 302 266 L 274 306 C 270 312, 262 316, 254 316 L 210 316 C 198 316, 192 304, 198 294 L 218 260 C 222 252, 224 248, 224 248 Z" fill="#34d399" opacity="0.9" />
-
-    <!-- Live Pulse Signal Node -->
-    <circle cx="340" cy="180" r="18" fill="#ffffff" filter="url(#glowFilter)" />
-    <circle cx="340" cy="180" r="10" fill="#10b981" />
-    <circle cx="340" cy="180" r="4.5" fill="#ffffff" />
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <path d="M165.5 301.6A118 118 0 1 1 346.5 301.6L269.2 396.4Q256 412.6 242.8 396.4Z" fill="#000" fill-opacity="0.12" transform="translate(0 10)"/>
+  <path d="M165.5 301.6A118 118 0 1 1 346.5 301.6L269.2 396.4Q256 412.6 242.8 396.4Z" fill="#FFFFFF"/>
+  <g fill="url(#bars)">
+    <rect x="203" y="232" width="26" height="44" rx="13"/>
+    <rect x="243" y="204" width="26" height="72" rx="13"/>
+    <rect x="283" y="176" width="26" height="100" rx="13"/>
   </g>
 </svg>

@@ -14,7 +14,7 @@ const base = {
 export function LogoMark({ className, alt = "זרם", ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
     <img
-      src="/logo.png"
+      src="/logo.svg"
       alt={alt}
       className={`rounded-2xl object-cover shrink-0 select-none shadow-xs ${className ?? "h-9 w-9"}`}
       {...props}
