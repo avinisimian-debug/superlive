@@ -10,6 +10,7 @@ const SIZES: BranchSize[] = ["express", "standard", "hyper"];
  */
 const WAZE_QUERY_OVERRIDES: Record<string, string> = {
   "b-0509": "רמי לוי ישפרו סנטר מודיעין",
+  "b-3449": "צרכניית מבוא חורון",
 };
 
 /**

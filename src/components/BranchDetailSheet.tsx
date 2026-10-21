@@ -1,5 +1,7 @@
 "use client";
 
+import { ChainLogo } from "./ChainLogo";
+
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
@@ -159,9 +161,7 @@ export function BranchDetailSheet({
         {/* Top Header */}
         <div className="flex items-start justify-between gap-3 p-5 pb-3 border-b border-slate-100">
           <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm text-base font-black ${chainMeta.bg} ${chainMeta.text}`}>
-              {chainMeta.logoLetter}
-            </div>
+            <ChainLogo chain={branch.chain} size="lg" />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className={`rounded-md border px-2 py-0.5 text-xs font-bold ${chainMeta.badgeBg} ${chainMeta.badgeText}`}>

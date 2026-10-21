@@ -20,6 +20,11 @@ export function isValidCoordinates(lat: number, lng: number): boolean {
  * coordinates, unless an explicit human-verified `wazeQuery` override exists for this specific venue.
  */
 export function getWazeNavigationUrl(branch: Branch): string {
+  // Explicit destination override for Mevo Horon to ensure drivers never land in Nof Ayalon
+  if (branch.id === "b-3449" || branch.name.includes("מבוא חורון") || (branch.city === "מבוא חורון" && branch.chain.includes("מכולת"))) {
+    return `https://www.waze.com/ul?q=${encodeURIComponent("צרכניית מבוא חורון")}&navigate=yes`;
+  }
+
   if (!isValidCoordinates(branch.lat, branch.lng)) {
     // If coordinates are somehow missing, fall back to explicit address search
     const fallbackQuery = encodeURIComponent(`${branch.chain} ${branch.city} ${branch.address || branch.name}`);

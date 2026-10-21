@@ -1,5 +1,7 @@
 "use client";
 
+import { ChainLogo } from "./ChainLogo";
+
 import type { Branch, Congestion, LiveState } from "@/lib/types";
 import { CONGESTION_HINT, PARKING_SHORT } from "@/lib/live";
 import { formatDistance } from "@/lib/geo";
@@ -102,12 +104,8 @@ export function SupermarketCard({
       {/* Header: Chain Logo Badge + Branch Name + Favorite Button */}
       <div className="flex items-start justify-between gap-3 pr-2">
         <div className="flex items-start gap-2.5 min-w-0 flex-1">
-          {/* Authentic Chain Mini Logo Box */}
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-2xs font-black text-sm ${chainMeta.bg} ${chainMeta.text}`}
-          >
-            {chainMeta.logoLetter}
-          </div>
+          {/* Authentic Chain Logo */}
+          <ChainLogo chain={branch.chain} size="md" />
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
