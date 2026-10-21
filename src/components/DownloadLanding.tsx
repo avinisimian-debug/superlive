@@ -27,6 +27,8 @@ import {
   StarIcon,
 } from "./icons";
 import { ZeremProModal } from "./ZeremProModal";
+import { LoginModal } from "./LoginModal";
+import { AuthButton } from "./AuthButton";
 
 const TOTAL_BRANCHES = "3,449";
 const TOTAL_CITIES = "1,174";
@@ -178,6 +180,8 @@ const TESTIMONIALS = [
 
 export function DownloadLanding() {
   const [iosOpen, setIosOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
   const [proModalOpen, setProModalOpen] = useState(false);
   const [selectedSim, setSelectedSim] = useState(0);
   const [qrSvg, setQrSvg] = useState("");
@@ -201,6 +205,16 @@ export function DownloadLanding() {
       cancelled = true;
     };
   }, []);
+
+  const handleAndroidClick = (e: React.MouseEvent) => {
+    if (typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      e.preventDefault();
+      setIosOpen(true);
+      return;
+    }
+    setDownloadMsg("הורדת קובץ האפליקציה (zerem.apk) החלה...");
+    setTimeout(() => setDownloadMsg(null), 5000);
+  };
 
   const handleShare = useCallback(async () => {
     const url = typeof window !== "undefined" ? window.location.origin : "";
@@ -264,6 +278,7 @@ export function DownloadLanding() {
               <CrownIcon className="h-3.5 w-3.5 text-amber-600" />
               Zerem Pro
             </button>
+            <AuthButton />
             <Link
               href="/"
               className="inline-flex items-center justify-center rounded-2xl bg-sky-500 px-4 py-2 text-xs font-black text-white shadow-xs transition hover:bg-sky-600 active:scale-95"
@@ -310,6 +325,14 @@ export function DownloadLanding() {
 
               <button
                 type="button"
+                onClick={() => setLoginOpen(true)}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 px-5 text-xs font-bold text-emerald-800 shadow-xs transition hover:bg-emerald-100 active:scale-98"
+              >
+                <span>התחברות לחשבון</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIosOpen(true)}
                 className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-xs font-bold text-slate-800 shadow-xs transition hover:bg-slate-50 active:scale-98"
               >
@@ -320,12 +343,20 @@ export function DownloadLanding() {
               <a
                 href="/zerem.apk"
                 download="zerem.apk"
+                onClick={handleAndroidClick}
                 className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-xs font-bold text-slate-800 shadow-xs transition hover:bg-slate-50 active:scale-98"
               >
                 <AndroidIcon className="h-4.5 w-4.5 text-emerald-600" />
                 <span>הורדה לאנדרואיד (APK)</span>
               </a>
             </div>
+
+            {downloadMsg ? (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-800 animate-pop">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>{downloadMsg}</span>
+              </div>
+            ) : null}
 
             {/* Verified Facts & Coverage */}
             <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto pt-6 border-t border-slate-200/60">
@@ -810,6 +841,9 @@ export function DownloadLanding() {
           </div>
         </div>
       ) : null}
+
+      {/* Login Modal */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
 
       {/* Pro Modal */}
       {proModalOpen ? (
