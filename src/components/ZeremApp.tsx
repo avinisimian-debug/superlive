@@ -10,7 +10,7 @@ import {
   SEARCH_INDEX,
 } from "@/lib/branches";
 import { distanceKm } from "@/lib/geo";
-import { isOpenAt } from "@/lib/schedules";
+import { isOpenAt, scheduleOf } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { Header } from "./Header";
@@ -141,7 +141,7 @@ export function ZeremApp() {
     const tokens = deferredSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return pool.filter((branch) => {
       if (city !== "all" && branch.city !== city) return false;
-      if (openNow && !isOpenAt(branch.scheduleIdx, date)) return false;
+      if (openNow && !isOpenAt(scheduleOf(branch), date)) return false;
       if (lowCongestion && (liveById.get(branch.id)?.congestion ?? "heavy") !== "free") {
         return false;
       }

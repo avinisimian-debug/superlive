@@ -42,3 +42,5 @@ next-env.d.ts
 # runtime auth data (file-backed store)
 /data/*.json
 .env*
+scripts/branch-verification/work/
+__pycache__/

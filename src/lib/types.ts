@@ -1,3 +1,5 @@
+import type { ScheduleProfile } from "./schedules";
+
 export const CHAINS = [
   "שופרסל",
   "שופרסל שלי",
@@ -41,6 +43,15 @@ export const CHAINS = [
 
 export type Chain = (typeof CHAINS)[number];
 
+/**
+ * chain: the chain's own store locator · osm: an OpenStreetMap shop of the same chain ·
+ * address: the exact street address · street: on the named street in the right town ·
+ * human: checked by a person.
+ */
+export type LocationSource = "chain" | "osm" | "address" | "street" | "human";
+/** chain: the chain's website · osm: OpenStreetMap opening_hours · human: checked by a person. */
+export type HoursSource = "chain" | "osm" | "human";
+
 export type Congestion = "free" | "medium" | "heavy";
 export type Parking = "plenty" | "partial" | "none";
 export type BranchSize = "express" | "standard" | "hyper";
@@ -67,6 +78,14 @@ export interface Branch {
   hoursVerified?: boolean;
   /** How far the map pin can be trusted (see data-quality.ts). */
   locationTrust?: "verified" | "consistent" | "unverified";
+  /** What confirmed the pin (see branch-verification.generated.ts). */
+  locationSource?: LocationSource;
+  /** This branch's own published hours, when known. Takes precedence over scheduleIdx. */
+  schedule?: ScheduleProfile;
+  /** Where `schedule` comes from. */
+  hoursSource?: HoursSource;
+  /** Public page the hours were taken from, so anyone can re-check them. */
+  hoursSourceUrl?: string;
   isCustom?: boolean;
   addedBy?: string;
 }

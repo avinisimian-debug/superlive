@@ -5,7 +5,7 @@ import { ChainLogo } from "./ChainLogo";
 import type { Branch, Congestion, LiveState } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_SHORT } from "@/lib/live";
 import { formatDistance } from "@/lib/geo";
-import { isOpenAt, openStatus } from "@/lib/schedules";
+import { isOpenAt, openStatus, scheduleOf } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
 import { getChainMeta } from "@/lib/chains";
 import { CarIcon, MapPinIcon, UsersIcon, WazeIcon, StarIcon, ClockIcon } from "./icons";
@@ -77,7 +77,8 @@ export function SupermarketCard({
 }) {
   const { isFavorite, toggleFavorite } = useLive();
   const date = new Date(now);
-  const status = openStatus(branch.scheduleIdx, date, !branch.hoursVerified);
+  const hoursKnown = !!branch.hoursVerified || branch.hoursSource === "osm";
+  const status = openStatus(scheduleOf(branch), date, !hoursKnown);
   const favorite = isFavorite(branch.id);
   const congestion = CONGESTION_CONFIG[live.congestion];
   // Without a fresh community report the level is a time-of-day estimate.
@@ -188,7 +189,7 @@ export function SupermarketCard({
               {formatDistance(distance)}
             </span>
           ) : (
-            <span>{branch.hoursVerified ? branch.hours : "שעות משוערות"}</span>
+            <span>{hoursKnown ? branch.hours : "שעות משוערות"}</span>
           )}
         </div>
 

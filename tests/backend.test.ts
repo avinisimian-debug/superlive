@@ -42,7 +42,7 @@ it("rejects report with non-existent branch ID", () => {
 
 it("rejects report with invalid congestion level", () => {
   const res = validateReportInput({
-    branchId: "b-0001",
+    branchId: "b-0002",
     congestion: "super_crowded",
     parking: "plenty",
   });
@@ -52,7 +52,7 @@ it("rejects report with invalid congestion level", () => {
 
 it("rejects report with invalid parking status", () => {
   const res = validateReportInput({
-    branchId: "b-0001",
+    branchId: "b-0002",
     congestion: "medium",
     parking: "underground_vip",
   });
@@ -62,7 +62,7 @@ it("rejects report with invalid parking status", () => {
 
 it("accepts valid standard branch report", () => {
   const res = validateReportInput({
-    branchId: "b-0001",
+    branchId: "b-0002",
     congestion: "heavy",
     parking: "none",
     branchName: "שופרסל דיל",
