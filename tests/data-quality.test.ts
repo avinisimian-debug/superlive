@@ -109,8 +109,8 @@ it("assessBranches flags a pin far from its city's branded stores", () => {
   assert.ok(q.get("far")!.offsetKm! > MAX_CITY_OFFSET_KM);
 });
 
-it("Victory Ofakim: Friday closes two hours before Shabbat, Saturday closed", () => {
-  const b = BRANCHES.find((x) => x.id === "b-0001")!;
+it("Victory Oranit: Friday closes two hours before Shabbat, Saturday closed", () => {
+  const b = BRANCHES.find((x) => x.id === "b-0002")!;
   assert.strictEqual(b.hoursSource, "chain");
   const rows = weeklyHours(scheduleOf(b));
   assert.ok(rows.some((r) => r.value.includes("שעתיים לפני כניסת שבת")), JSON.stringify(rows));
