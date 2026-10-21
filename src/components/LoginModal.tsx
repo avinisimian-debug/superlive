@@ -38,21 +38,21 @@ export function LoginModal({
   return createPortal(
     <div
       data-testid="login-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="התחברות"
-        className="animate-pop relative my-auto w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-6 text-center shadow-2xl sm:p-8"
+        className="animate-pop relative my-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="סגור"
-          className="absolute left-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-slate-400 transition hover:border-slate-700 hover:text-white"
+          className="absolute left-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400 transition hover:border-slate-300 hover:text-slate-700"
         >
           <CloseIcon className="h-4.5 w-4.5" />
         </button>

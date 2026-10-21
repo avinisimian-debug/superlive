@@ -94,15 +94,15 @@ export function LoginForm({
   };
 
   return (
-    <div data-testid="login-form" className="w-full">
+    <div data-testid="login-form" className="w-full text-right">
       <div className="flex flex-col items-center text-center">
-        <LogoMark className="h-12 w-12 rounded-2xl border border-cyan-500/30 shadow-md shadow-cyan-500/20" />
-        <h2 className="mt-3 text-lg font-black tracking-tight text-white">
-          {mode === "signup" ? "פתיחת חשבון Zerem" : title}
+        <LogoMark className="h-12 w-12 rounded-2xl shadow-md" />
+        <h2 className="mt-3 text-lg font-black tracking-tight text-slate-900">
+          {mode === "signup" ? "פתיחת חשבון ב-Zerem" : title}
         </h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-slate-500">
           {mode === "signup"
-            ? "הצטרפו לקהילת הפינטק של Zerem לחיסכון בזמן בקניות"
+            ? "פתיחת חשבון חינם כדי לשמור מועדפים ולדווח בלייב"
             : "התחברו עם המייל והסיסמה שלכם"}
         </p>
       </div>
@@ -110,7 +110,7 @@ export function LoginForm({
       {error ? (
         <p
           data-testid="login-error"
-          className="mt-4 rounded-xl border border-rose-500/40 bg-rose-950/40 px-4 py-2.5 text-center text-xs font-bold text-rose-300"
+          className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-center text-xs font-bold text-rose-700"
         >
           {error}
         </p>
@@ -125,7 +125,7 @@ export function LoginForm({
       >
         <div
           data-testid="login-mode-tabs"
-          className="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1"
+          className="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1"
         >
           <button
             type="button"
@@ -134,8 +134,8 @@ export function LoginForm({
             onClick={() => switchMode("login")}
             className={`min-h-9 rounded-lg text-xs font-bold transition ${
               mode === "login"
-                ? "border border-cyan-500/40 bg-slate-800 text-cyan-300 shadow-sm"
-                : "text-slate-400 hover:text-white"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
             }`}
           >
             התחברות
@@ -147,17 +147,17 @@ export function LoginForm({
             onClick={() => switchMode("signup")}
             className={`min-h-9 rounded-lg text-xs font-bold transition ${
               mode === "signup"
-                ? "border border-cyan-500/40 bg-slate-800 text-cyan-300 shadow-sm"
-                : "text-slate-400 hover:text-white"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
             }`}
           >
-            הרשמה
+            הרשמה (חשבון חדש)
           </button>
         </div>
 
         {mode === "signup" ? (
           <>
-            <label className="block text-xs font-bold text-slate-300">
+            <label className="block text-xs font-bold text-slate-700">
               שם מלא
             </label>
             <input
@@ -169,13 +169,13 @@ export function LoginForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ישראל ישראלי"
-              className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-right text-xs font-semibold text-white outline-none transition focus:border-cyan-500/70"
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-right text-xs font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white"
             />
           </>
         ) : null}
 
         <label
-          className={`block text-xs font-bold text-slate-300 ${
+          className={`block text-xs font-bold text-slate-700 ${
             mode === "signup" ? "mt-3" : ""
           }`}
         >
@@ -191,10 +191,10 @@ export function LoginForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-left text-xs font-semibold text-white outline-none transition focus:border-cyan-500/70"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-left text-xs font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white"
         />
 
-        <label className="mt-3 block text-xs font-bold text-slate-300">
+        <label className="mt-3 block text-xs font-bold text-slate-700">
           סיסמה
         </label>
         <input
@@ -207,14 +207,14 @@ export function LoginForm({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
-          className="mt-1.5 w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-left text-xs font-semibold text-white outline-none transition focus:border-cyan-500/70"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-left text-xs font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white"
         />
 
         <button
           type="submit"
           data-testid="login-submit"
           disabled={loading}
-          className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-cyan-400 text-sm font-black text-slate-950 shadow-md shadow-cyan-400/20 transition hover:bg-cyan-300 active:scale-[0.99] disabled:opacity-60"
+          className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 text-sm font-black text-white shadow-md transition hover:bg-sky-600 active:scale-[0.99] disabled:opacity-60"
         >
           {loading
             ? "מאמת נתונים…"

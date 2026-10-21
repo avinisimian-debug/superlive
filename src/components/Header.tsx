@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useLive } from "@/lib/store";
 import {
   LogoMark,
@@ -8,8 +7,6 @@ import {
   MapPinIcon,
   BuildingIcon,
   ChevronDownIcon,
-  DownloadIcon,
-  SparkIcon,
 } from "./icons";
 import { AuthButton } from "./AuthButton";
 
@@ -49,14 +46,6 @@ export function Header({
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/download"
-              aria-label="הורדת האפליקציה"
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-95"
-            >
-              <DownloadIcon className="h-3.5 w-3.5 text-sky-600" />
-              הורדה
-            </Link>
             <AuthButton />
           </div>
         </div>
