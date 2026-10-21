@@ -1,5 +1,7 @@
 "use client";
 
+import { ChainLogo } from "./ChainLogo";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
@@ -385,20 +387,23 @@ export function DownloadLanding() {
           <div className="mt-6 max-w-md mx-auto">
             <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white to-slate-50 p-5 shadow-card text-right">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded-lg bg-sky-50 px-2 py-0.5 text-[0.7rem] font-bold text-sky-700">
-                      {currentSim.chain}
-                    </span>
-                    <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-[0.66rem] font-bold text-slate-500">
-                      {currentSim.city}
-                    </span>
+                <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                  <ChainLogo chain={currentSim.chain} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-lg bg-sky-50 px-2 py-0.5 text-[0.7rem] font-bold text-sky-700">
+                        {currentSim.chain}
+                      </span>
+                      <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-[0.66rem] font-bold text-slate-500">
+                        {currentSim.city}
+                      </span>
+                    </div>
+                    <h3 className="mt-1.5 text-base font-black text-slate-900 truncate">
+                      {currentSim.name}
+                    </h3>
                   </div>
-                  <h3 className="mt-1.5 text-base font-black text-slate-900">
-                    {currentSim.name}
-                  </h3>
                 </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full ${currentSim.bg} px-3 py-1 text-xs font-bold ${currentSim.text}`}>
+                <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full ${currentSim.bg} px-3 py-1 text-xs font-bold ${currentSim.text}`}>
                   <span className={`h-2 w-2 rounded-full ${currentSim.dot} animate-pulse`} />
                   {currentSim.label}
                 </span>
