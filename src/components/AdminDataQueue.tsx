@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Summary {
   branchId: string;
@@ -36,19 +36,25 @@ export function AdminDataQueue() {
   const [data, setData] = useState<QueueData | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/data-reports", { cache: "no-store" });
-      if (!res.ok) throw new Error(String(res.status));
-      setData((await res.json()) as QueueData);
-    } catch {
-      setFailed(true);
-    }
-  }, []);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let active = true;
+    fetch("/api/admin/data-reports", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json() as Promise<QueueData>;
+      })
+      .then((json) => {
+        if (active) setData(json);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
 
   const resolve = async (branchId: string) => {
     await fetch("/api/admin/data-reports", {
@@ -56,7 +62,7 @@ export function AdminDataQueue() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ branchId }),
     });
-    void load();
+    setReloadKey((k) => k + 1);
   };
 
   return (

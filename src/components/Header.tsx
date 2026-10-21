@@ -124,7 +124,7 @@ export function Header({
           <span className="text-slate-300">·</span>
           <span className="flex items-center gap-1 font-bold text-emerald-700">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {freeNow.toLocaleString("he-IL")} פנויים כעת
+            {freeNow.toLocaleString("he-IL")} צפויים פנויים
           </span>
           <span className="text-slate-300">·</span>
           <span>{cityCount} יישובים</span>

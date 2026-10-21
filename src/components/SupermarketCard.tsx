@@ -3,7 +3,7 @@
 import { ChainLogo } from "./ChainLogo";
 
 import type { Branch, Congestion, LiveState } from "@/lib/types";
-import { CONGESTION_HINT, PARKING_SHORT } from "@/lib/live";
+import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_SHORT } from "@/lib/live";
 import { formatDistance } from "@/lib/geo";
 import { isOpenAt, openStatus } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
@@ -80,6 +80,8 @@ export function SupermarketCard({
   const status = openStatus(branch.scheduleIdx, date, !branch.hoursVerified);
   const favorite = isFavorite(branch.id);
   const congestion = CONGESTION_CONFIG[live.congestion];
+  // Without a fresh community report the level is a time-of-day estimate.
+  const congestionLabel = live.estimated ? `צפוי: ${CONGESTION_LABEL[live.congestion]}` : congestion.label;
   const chainMeta = getChainMeta(branch.chain);
 
   // Exact physical Waze navigation URL
@@ -153,9 +155,11 @@ export function SupermarketCard({
         {/* Congestion Box */}
         <div className={`rounded-2xl border p-2.5 ${congestion.bg} ${congestion.border}`}>
           <div className="flex items-center gap-1.5">
-            <span className={`h-2.5 w-2.5 rounded-full ${congestion.dot} animate-pulse shrink-0`} />
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${congestion.dot} shrink-0 ${live.estimated ? "opacity-60" : "animate-pulse"}`}
+            />
             <span className={`text-xs font-black ${congestion.text}`}>
-              {congestion.label}
+              {congestionLabel}
             </span>
           </div>
           <p className="text-[0.68rem] font-semibold text-slate-600 mt-0.5">

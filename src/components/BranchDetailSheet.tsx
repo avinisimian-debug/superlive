@@ -5,7 +5,7 @@ import { DataIssueReport } from "./DataIssueReport";
 
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
-import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, communityReports, loadScore } from "@/lib/live";
+import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, loadScore } from "@/lib/live";
 import { SCHEDULES, isOpenAt, openStatus, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
@@ -73,7 +73,6 @@ export function BranchDetailSheet({
     [branch.scheduleIdx, branch.hoursVerified, date],
   );
   const hours = useMemo(() => weeklyHours(branch.scheduleIdx), [branch.scheduleIdx]);
-  const reports = useMemo(() => communityReports(branch, now), [branch, now]);
   const chainMeta = getChainMeta(branch.chain);
   const { isFavorite, toggleFavorite } = useLive();
   const favorite = isFavorite(branch.id);
@@ -229,9 +228,9 @@ export function BranchDetailSheet({
           <div className={`rounded-3xl border border-slate-200/80 p-4 ${cong.bg}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={`h-3 w-3 rounded-full ${cong.dot} animate-pulse`} />
+                <span className={`h-3 w-3 rounded-full ${cong.dot} ${live.estimated ? "opacity-60" : "animate-pulse"}`} />
                 <span className={`text-sm font-black ${cong.text}`}>
-                  {cong.label}
+                  {live.estimated ? `צפוי: ${CONGESTION_LABEL[live.congestion]}` : cong.label}
                 </span>
               </div>
               <span className={`text-xs font-bold ${status.open ? "text-emerald-700" : "text-rose-700"}`}>
@@ -239,18 +238,24 @@ export function BranchDetailSheet({
               </span>
             </div>
 
+            <p className="mt-1.5 text-[0.7rem] font-semibold text-slate-600">
+              {live.estimated || live.lastReportAt === null
+                ? "אין דיווח עדכני. ההערכה מבוססת על השעה והיום בשבוע."
+                : `לפי ${live.reportCount === 1 ? "דיווח אחד" : `${live.reportCount} דיווחים`} מהקהילה, האחרון ${minutesAgoLabel(live.lastReportAt, now)}.`}
+            </p>
+
             {/* Smart Quiet Hours Recommendation */}
             {quietestHour && (
               <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/90 p-2.5 text-xs text-slate-800 font-bold border border-slate-100">
                 <ZapIcon className="h-4 w-4 text-amber-500 shrink-0" />
-                <span>שעה מומלצת להגעה היום: סביב {quietestHour.hour}:00 (ללא תור וחניה בשפע)</span>
+                <span>השעה הצפויה להיות הכי שקטה היום: סביב {quietestHour.hour}:00</span>
               </div>
             )}
 
             {/* Hourly congestion graph */}
             <div className="mt-4 pt-3 border-t border-slate-200/60">
               <p className="text-[0.72rem] font-bold text-slate-600 mb-2">
-                תחזית עומסים לפי שעות היום:
+                עומס צפוי לפי שעות היום (הערכה):
               </p>
               <div className="flex items-end justify-between gap-1.5 h-20 pt-1">
                 {bars.map(({ hour, load, congestion }) => {

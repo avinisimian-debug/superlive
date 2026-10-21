@@ -14,9 +14,9 @@ function it(name: string, fn: () => void) {
     fn();
     console.log(`  ✅ PASS: ${name}`);
     passed++;
-  } catch (err: any) {
+  } catch (err) {
     console.error(`  ❌ FAIL: ${name}`);
-    console.error(`     ${err.message}`);
+    console.error(`     ${(err as Error).message}`);
     failed++;
   }
 }
