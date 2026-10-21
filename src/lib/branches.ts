@@ -1,7 +1,9 @@
 import { RAW_BRANCHES, CITY_NAMES } from "./branches.generated";
-import { SCHEDULES } from "./schedules";
+import { SCHEDULES, weeklyHours, type ScheduleProfile } from "./schedules";
 import { CHAINS, type Branch, type BranchSize, type Chain } from "./types";
 import { assessBranches, type BranchQuality } from "./data-quality";
+import { BRANCH_HOURS, LOCATION_CHECKS } from "./branch-verification.generated";
+import { isValidCoordinates } from "./navigation";
 
 const SIZES: BranchSize[] = ["express", "standard", "hyper"];
 
@@ -27,8 +29,20 @@ const HUMAN_VERIFIED_IDS = new Set<string>(["b-3449"]);
  */
 const GENERIC_CHAINS = new Set<Chain>(["מכולת שכונתית", "סופרמרקט שכונתי"]);
 
-const ALL_BRANCHES: Branch[] = RAW_BRANCHES.map(
-  ([id, name, c, ci, addr, lat, lng, sch, size]) => ({
+function publishedSchedule(id: string): Pick<Branch, "schedule" | "hoursSource" | "hoursSourceUrl"> {
+  const entry = BRANCH_HOURS[id];
+  if (!entry) return {};
+  const [source, url, days] = entry;
+  const schedule: ScheduleProfile = { label: "", days };
+  schedule.label = weeklyHours(schedule)
+    .map((row) => `${row.label} ${row.value}`)
+    .join(" · ");
+  return { schedule, hoursSource: source, hoursSourceUrl: url };
+}
+
+const ALL_BRANCHES: Branch[] = RAW_BRANCHES.map(([id, name, c, ci, addr, lat, lng, sch, size]) => {
+  const published = publishedSchedule(id);
+  return {
     id,
     name,
     chain: CHAINS[c],
@@ -37,19 +51,25 @@ const ALL_BRANCHES: Branch[] = RAW_BRANCHES.map(
     lat,
     lng,
     scheduleIdx: sch,
-    hours: SCHEDULES[sch]?.label ?? "",
+    hours: published.schedule?.label ?? SCHEDULES[sch]?.label ?? "",
     size: SIZES[size] ?? "standard",
     wazeQuery: WAZE_QUERY_OVERRIDES[id],
-    hoursVerified: HUMAN_VERIFIED_IDS.has(id),
-  }),
-);
+    ...published,
+    // Hours from the chain's own site (or a person) are this branch's real hours.
+    hoursVerified: HUMAN_VERIFIED_IDS.has(id) || published.hoursSource === "chain",
+  };
+});
 
 /** Location check result for every imported branch, keyed by id. */
 export const BRANCH_QUALITY: Map<string, BranchQuality> = assessBranches(
   ALL_BRANCHES.map((b) => ({ ...b, anchor: !GENERIC_CHAINS.has(b.chain) })),
 );
 
-export type QuarantineReason = "far-from-city" | "invalid-coordinates" | "unverifiable-generic";
+export type QuarantineReason =
+  | "far-from-city"
+  | "invalid-coordinates"
+  | "unverifiable-generic"
+  | "unconfirmed-location";
 
 export interface QuarantinedBranch {
   branch: Branch;
@@ -57,49 +77,61 @@ export interface QuarantinedBranch {
   offsetKm: number | null;
 }
 
-/** Why a branch must not be shown or navigated to, or null when it is fine. */
-function quarantineReason(branch: Branch, q: BranchQuality | undefined): QuarantineReason | null {
-  if (HUMAN_VERIFIED_IDS.has(branch.id) || !q) return null;
-  if (q.trust === "suspect") return q.reason === "invalid-coordinates" ? "invalid-coordinates" : "far-from-city";
-  if (q.trust === "unverified" && GENERIC_CHAINS.has(branch.chain)) return "unverifiable-generic";
-  return null;
+/**
+ * Applies the cross-checked pin from branch-verification.generated.ts, or
+ * returns why the branch must not be shown. A branch is only listed when an
+ * independent source (the chain's locator, an OpenStreetMap shop of the same
+ * chain, or its exact street address) puts the pin where Waze should drive.
+ */
+function checkedBranch(branch: Branch, q: BranchQuality | undefined): Branch | QuarantineReason {
+  if (HUMAN_VERIFIED_IDS.has(branch.id)) {
+    return { ...branch, locationTrust: "verified", locationSource: "human", hoursSource: "human" };
+  }
+  const check = LOCATION_CHECKS[branch.id];
+  if (!check) {
+    if (q?.trust === "suspect") return q.reason === "invalid-coordinates" ? "invalid-coordinates" : "far-from-city";
+    if (q?.trust === "unverified" && GENERIC_CHAINS.has(branch.chain)) return "unverifiable-generic";
+    return "unconfirmed-location";
+  }
+  const [lat, lng, source, city, name] = check;
+  if (!isValidCoordinates(lat, lng)) return "invalid-coordinates";
+  return {
+    ...branch,
+    lat,
+    lng,
+    // The verified settlement replaces the imported city label, which was often a street or neighbourhood.
+    city: city ?? (q?.city && q.city !== "אזור אחר" ? q.city : branch.city),
+    name: name ?? branch.name,
+    locationTrust: "verified",
+    locationSource: source,
+  };
 }
 
 const visible: Branch[] = [];
-/** Branches held back because Waze would likely lead to the wrong place. */
+/** Branches held back because Waze could lead to the wrong place. */
 export const QUARANTINED_BRANCHES: QuarantinedBranch[] = [];
 
 for (const branch of ALL_BRANCHES) {
   const q = BRANCH_QUALITY.get(branch.id);
-  const reason = quarantineReason(branch, q);
-  if (reason) {
-    QUARANTINED_BRANCHES.push({ branch, reason, offsetKm: q?.offsetKm ?? null });
+  const checked = checkedBranch(branch, q);
+  if (typeof checked === "string") {
+    QUARANTINED_BRANCHES.push({ branch, reason: checked, offsetKm: q?.offsetKm ?? null });
     continue;
   }
-  visible.push({
-    ...branch,
-    // The branch title is more reliable than the imported city field.
-    city: q?.city && q.city !== "אזור אחר" ? q.city : branch.city,
-    locationTrust: HUMAN_VERIFIED_IDS.has(branch.id)
-      ? "verified"
-      : q?.trust === "consistent"
-        ? "consistent"
-        : "unverified",
-  });
+  visible.push(checked);
 }
 
 /**
- * Nationwide directory of Israeli supermarket branches that passed the
- * location checks. Coordinates and names come from OpenStreetMap (Overpass
- * API); see data-quality.ts for what is held back and why.
+ * Nationwide directory of Israeli supermarket branches whose pin was
+ * confirmed by an independent source (see branch-verification.generated.ts
+ * and scripts/branch-verification). Everything else is held back.
  */
 export const BRANCHES: Branch[] = visible;
 
 export const NATIONWIDE_COUNT = BRANCHES.length;
 
-/** Cities that actually contain listed branches, kept in the dataset's Hebrew order. */
-const LISTED_CITIES = new Set(BRANCHES.map((b) => b.city));
-export const CITIES: string[] = CITY_NAMES.filter((c) => LISTED_CITIES.has(c));
+/** Cities that actually contain listed branches, in Hebrew alphabetical order. */
+export const CITIES: string[] = [...new Set(BRANCHES.map((b) => b.city))].sort((a, b) => a.localeCompare(b, "he"));
 
 /** Pre-normalised search text per branch id. */
 export const SEARCH_INDEX: Map<string, string> = new Map(

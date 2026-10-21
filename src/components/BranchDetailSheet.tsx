@@ -6,7 +6,7 @@ import { DataIssueReport } from "./DataIssueReport";
 import { useEffect, useMemo, useState } from "react";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { CONGESTION_HINT, CONGESTION_LABEL, PARKING_LABEL, loadScore } from "@/lib/live";
-import { SCHEDULES, isOpenAt, openStatus, weeklyHours } from "@/lib/schedules";
+import { earliestOpening, isOpenAt, openStatus, scheduleOf, weeklyHours } from "@/lib/schedules";
 import { formatDistance } from "@/lib/geo";
 import { useLive } from "@/lib/store";
 import { getWazeNavigationUrl } from "@/lib/navigation";
@@ -68,30 +68,20 @@ export function BranchDetailSheet({
 }) {
   const [copied, setCopied] = useState(false);
   const date = useMemo(() => new Date(now), [now]);
-  const status = useMemo(
-    () => openStatus(branch.scheduleIdx, date, !branch.hoursVerified),
-    [branch.scheduleIdx, branch.hoursVerified, date],
-  );
-  const hours = useMemo(() => weeklyHours(branch.scheduleIdx), [branch.scheduleIdx]);
+  const schedule = scheduleOf(branch);
+  const hoursKnown = !!branch.hoursVerified || branch.hoursSource === "osm";
+  const status = useMemo(() => openStatus(schedule, date, !hoursKnown), [schedule, hoursKnown, date]);
+  const hours = useMemo(() => weeklyHours(schedule), [schedule]);
   const chainMeta = getChainMeta(branch.chain);
   const { isFavorite, toggleFavorite } = useLive();
   const favorite = isFavorite(branch.id);
 
   const hourTicks = useMemo(() => {
-    const profile = SCHEDULES[branch.scheduleIdx];
-    if (!profile) return [8, 10, 12, 14, 16, 18, 20, 22];
-    let earliest = 480;
-    for (const d of profile.days) {
-      if (d) {
-        for (const [o] of d) {
-          if (o < earliest) earliest = o;
-        }
-      }
-    }
+    const earliest = Math.min(earliestOpening(schedule) ?? 480, 480);
     if (earliest <= 390) return [6, 8, 10, 12, 14, 16, 18, 20, 22];
     if (earliest <= 420) return [7, 9, 11, 13, 15, 17, 19, 21];
     return [8, 10, 12, 14, 16, 18, 20, 22];
-  }, [branch.scheduleIdx]);
+  }, [schedule]);
 
   const bars = useMemo(
     () =>
@@ -110,11 +100,11 @@ export function BranchDetailSheet({
     const openBars = bars.filter(({ hour }) => {
       const at = new Date(now);
       at.setHours(hour, 0, 0, 0);
-      return isOpenAt(branch.scheduleIdx, at);
+      return isOpenAt(schedule, at);
     });
     if (!openBars.length) return null;
     return [...openBars].sort((a, b) => a.load - b.load)[0];
-  }, [bars, now, branch.scheduleIdx]);
+  }, [bars, now, schedule]);
 
   const wazeHref = getWazeNavigationUrl(branch);
 
@@ -300,9 +290,25 @@ export function BranchDetailSheet({
             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-4">
               <p className="flex items-center gap-1.5 text-xs font-black text-slate-800">
                 <ClockIcon className="h-4 w-4 text-sky-600" />
-                {branch.hoursVerified ? "שעות פעילות" : "שעות פעילות משוערות"}
+                {hoursKnown ? "שעות פעילות" : "שעות פעילות משוערות"}
               </p>
-              {!branch.hoursVerified && (
+              {branch.hoursSourceUrl && (
+                <p className="mt-1 text-[0.68rem] font-semibold leading-snug text-slate-500">
+                  {branch.hoursSource === "chain" ? "לפי אתר הרשת" : "לפי OpenStreetMap"}
+                  {" · "}
+                  <a
+                    href={branch.hoursSourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-slate-700"
+                  >
+                    למקור
+                  </a>
+                  {". "}
+                  בחגים השעות עשויות להשתנות.
+                </p>
+              )}
+              {!hoursKnown && (
                 <p className="mt-1 rounded-xl bg-amber-50 px-2 py-1 text-[0.68rem] font-semibold leading-snug text-amber-900">
                   לפי השעות הנפוצות ברשת, לא אומתו מול הסניף. כדאי לוודא לפני שיוצאים, במיוחד בערב חג.
                 </p>
