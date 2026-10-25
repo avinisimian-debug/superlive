@@ -23,7 +23,7 @@ export function ReportModal({
   branch: Branch;
   initial: LiveState;
   onClose: () => void;
-  onSubmit: (congestion: Congestion, parking: Parking) => void;
+  onSubmit: (congestion: Congestion, parking: Parking, origin: { x: number; y: number }) => void;
 }) {
   const [congestion, setCongestion] = useState<Congestion>(initial.congestion);
   const [parking, setParking] = useState<Parking>(initial.parking);
@@ -122,7 +122,10 @@ export function ReportModal({
       <div className="px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-4">
         <button
           type="button"
-          onClick={() => onSubmit(congestion, parking)}
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            onSubmit(congestion, parking, { x: rect.left + rect.width / 2, y: rect.top });
+          }}
           className="press sheen bg-brand-gradient flex h-13 w-full items-center justify-center gap-2 rounded-2xl text-[0.95rem] font-black text-white shadow-glow"
         >
           <CheckIcon className="h-5 w-5" />

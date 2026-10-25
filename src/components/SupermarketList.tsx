@@ -5,6 +5,7 @@ import type { Branch, LiveState } from "@/lib/types";
 import type { BranchRouteInfo } from "@/lib/routing";
 import { SupermarketCard } from "./SupermarketCard";
 import { SearchIcon } from "./icons";
+import { useReveal } from "./ui";
 
 export interface ListItem {
   branch: Branch;
@@ -29,6 +30,7 @@ export function SupermarketList({
   const [visible, setVisible] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLLIElement | null>(null);
   const armedRef = useRef(false);
+  const listRef = useReveal<HTMLUListElement>([visible, items]);
 
   useEffect(() => {
     const arm = () => {
@@ -79,9 +81,9 @@ export function SupermarketList({
 
   return (
     <>
-      <ul className="stagger mt-3 space-y-3 px-4">
+      <ul ref={listRef} className="mt-3 space-y-3 px-4">
         {shown.map((item) => (
-          <li key={item.branch.id}>
+          <li key={item.branch.id} className="reveal">
             <SupermarketCard
               branch={item.branch}
               live={item.live}

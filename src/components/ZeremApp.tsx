@@ -25,6 +25,7 @@ import { BottomNav, type AppTab } from "./BottomNav";
 import { PersonalArea } from "./PersonalArea";
 import { RadarIcon, StarIcon } from "./icons";
 import { useAuth } from "@/lib/auth";
+import { Effects, celebrate } from "./ui";
 
 const CONGESTION_RANK: Record<Congestion, number> = { free: 0, medium: 1, heavy: 2 };
 const PARKING_RANK: Record<Parking, number> = { plenty: 0, partial: 1, none: 2 };
@@ -399,13 +400,16 @@ export function ZeremApp() {
           branch={reporting}
           initial={getLive(reporting)}
           onClose={() => setReporting(null)}
-          onSubmit={(congestion, parking) => {
+          onSubmit={(congestion, parking, origin) => {
             submitReport(reporting, congestion, parking);
             setReporting(null);
+            // The sheet is closing, so burst from mid-screen above where its button was.
+            celebrate(origin.x, Math.min(origin.y, window.innerHeight * 0.55), 20);
           }}
         />
       ) : null}
 
+      <Effects />
       <PassiveTracker />
       <Toast />
     </>

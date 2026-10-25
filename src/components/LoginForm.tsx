@@ -214,7 +214,7 @@ export function LoginForm({
           type="submit"
           data-testid="login-submit"
           disabled={loading}
-          className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-sky-500 text-sm font-black text-white shadow-md transition hover:bg-sky-600 active:scale-[0.99] disabled:opacity-60"
+          className="press sheen bg-brand-gradient mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black text-white shadow-glow disabled:opacity-60"
         >
           {loading
             ? "מאמת נתונים…"

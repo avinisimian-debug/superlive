@@ -9,7 +9,8 @@ import { openStatus, scheduleOf } from "@/lib/schedules";
 import { useLive } from "@/lib/store";
 import { CarIcon, MapPinIcon, WazeIcon, StarIcon, ClockIcon, UsersIcon } from "./icons";
 import { getWazeNavigationUrl } from "@/lib/navigation";
-import { CrowdMeter, TONE } from "./ui";
+import { useState } from "react";
+import { CrowdMeter, StarBurst, TONE, useTilt } from "./ui";
 
 export function SupermarketCard({
   branch,
@@ -43,9 +44,16 @@ export function SupermarketCard({
   // Without a fresh community report the level is a time-of-day estimate.
   const congestionLabel = live.estimated ? `צפוי: ${tone.label}` : tone.label;
   const wazeHref = getWazeNavigationUrl(branch);
+  const { ref, handlers } = useTilt<HTMLElement>();
+  // Bumped on each "save" so the star replays its pop and burst.
+  const [burst, setBurst] = useState(0);
 
   return (
-    <article className="press group relative overflow-hidden rounded-[1.6rem] bg-white p-4 shadow-card ring-1 ring-slate-200/60 hover:shadow-lift">
+    <article
+      ref={ref}
+      {...handlers}
+      className="tilt spotlight group relative overflow-hidden rounded-[1.6rem] bg-white p-4 shadow-card ring-1 ring-slate-200/60 hover:shadow-lift"
+    >
       {/* Soft wash of the crowd colour behind the gauge */}
       <span
         aria-hidden="true"
@@ -85,16 +93,19 @@ export function SupermarketCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (!favorite) setBurst((n) => n + 1);
             toggleFavorite(branch.id);
           }}
           aria-label={favorite ? "הסר ממועדפים" : "שמור במועדפים"}
           aria-pressed={favorite}
-          className="press relative z-20 -m-1 grid h-9 w-9 place-items-center rounded-full text-slate-300 hover:bg-slate-100 hover:text-amber-400"
+          className="relative z-20 -m-1 grid h-9 w-9 place-items-center rounded-full text-slate-300 transition hover:bg-slate-100 hover:text-amber-400 active:scale-90"
         >
           <StarIcon
+            key={burst}
             filled={favorite}
-            className={`h-5 w-5 transition-transform duration-300 ${favorite ? "scale-110 text-amber-400" : ""}`}
+            className={`h-5 w-5 transition-transform duration-300 ${favorite ? "scale-110 text-amber-400" : ""} ${burst && favorite ? "star-pop" : ""}`}
           />
+          {burst > 0 && favorite ? <StarBurst key={`b${burst}`} /> : null}
         </button>
       </div>
 

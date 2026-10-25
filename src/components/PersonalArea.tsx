@@ -166,6 +166,7 @@ export function PersonalArea({
                 </linearGradient>
               </defs>
             </svg>
+            <span className="orbiter" aria-hidden="true" />
             <div className="absolute inset-[9px] grid place-items-center rounded-full bg-brand-gradient text-2xl font-black shadow-glow">
               {initial ?? <UserIcon className="h-8 w-8" />}
             </div>
@@ -343,12 +344,12 @@ export function PersonalArea({
               <div
                 key={b.key}
                 className={`relative flex flex-col items-center rounded-[1.2rem] p-3 text-center ring-1 ${
-                  b.done ? "bg-white shadow-card ring-slate-200/60" : "bg-slate-100/70 ring-transparent"
+                  b.done ? "holo bg-white shadow-card ring-slate-200/60" : "bg-slate-100/70 ring-transparent"
                 }`}
               >
                 <span
                   className={`grid h-11 w-11 place-items-center rounded-2xl ${
-                    b.done ? "bg-brand-gradient text-white shadow-glow" : "bg-slate-200/80 text-slate-400"
+                    b.done ? "bob bg-brand-gradient text-white shadow-glow" : "bg-slate-200/80 text-slate-400 grayscale"
                   }`}
                 >
                   {b.icon}
@@ -369,7 +370,7 @@ export function PersonalArea({
 
         {/* ── VIP ──────────────────────────────────────────── */}
         <section className="animate-rise">
-          <div className="relative overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-[#1a1206] via-[#2b1d07] to-[#120c03] p-5 text-white shadow-lift">
+          <div className="holo relative overflow-hidden rounded-[1.6rem] bg-gradient-to-br from-[#1a1206] via-[#2b1d07] to-[#120c03] p-5 text-white shadow-lift">
             <span aria-hidden="true" className="absolute -left-12 -top-12 h-40 w-40 rounded-full bg-amber-400/25 blur-3xl" />
             <div className="relative flex items-start gap-3">
               <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-200 to-amber-500 text-ink-950 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.8)]">

@@ -52,7 +52,7 @@ export function BottomNav({
                 active ? "text-white" : "text-white/55 hover:text-white/80"
               }`}
             >
-              <span className="relative">
+              <span key={active ? `${tab.id}-on` : tab.id} className={`relative ${active ? "icon-bounce" : ""}`}>
                 {tab.id === "feed" ? (
                   <ZapIcon className="h-5 w-5" />
                 ) : tab.id === "favorites" ? (

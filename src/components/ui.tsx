@@ -168,3 +168,151 @@ export function SectionTitle({
     </div>
   );
 }
+
+const CONFETTI_COLORS = ["#00c2ff", "#0057d9", "#12b76a", "#f79009", "#7c5cff", "#ffffff"];
+
+/** Confetti burst plus a floating "+N" from a screen point. Pure DOM, cleans itself up. */
+export function celebrate(x: number, y: number, points?: number) {
+  if (typeof window === "undefined") return;
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  const nodes: HTMLElement[] = [];
+  for (let i = 0; i < 36; i++) {
+    const el = document.createElement("i");
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 80 + Math.random() * 140;
+    el.className = "confetti";
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.width = `${5 + Math.random() * 5}px`;
+    el.style.height = `${8 + Math.random() * 8}px`;
+    el.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    el.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
+    el.style.setProperty("--y", `${Math.sin(angle) * dist - 60 + Math.random() * 120}px`);
+    el.style.setProperty("--r", `${(Math.random() - 0.5) * 900}deg`);
+    el.style.setProperty("--d", `${0.9 + Math.random() * 0.6}s`);
+    document.body.appendChild(el);
+    nodes.push(el);
+  }
+  if (points) {
+    const tag = document.createElement("div");
+    tag.className = "points-float";
+    tag.dir = "ltr";
+    tag.textContent = `+${points}`;
+    tag.style.left = `${x}px`;
+    tag.style.top = `${y - 30}px`;
+    document.body.appendChild(tag);
+    nodes.push(tag);
+  }
+  window.setTimeout(() => nodes.forEach((n) => n.remove()), 1700);
+}
+
+/** Small particle ring shown when a star is switched on. */
+export function StarBurst() {
+  return (
+    <span className="burst" aria-hidden="true">
+      {Array.from({ length: 8 }, (_, i) => (
+        <i
+          key={i}
+          style={{
+            ["--a" as string]: `${i * 45}deg`,
+            background: i % 2 ? "#fbbf24" : "#f79009",
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * App-wide effects: an ink ripple on every `.press` surface and a `--sy`
+ * scroll variable for parallax. Mount once.
+ */
+export function Effects() {
+  useEffect(() => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const onDown = (event: PointerEvent) => {
+      if (reduce) return;
+      const host = (event.target as HTMLElement | null)?.closest<HTMLElement>(".press");
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 2.2;
+      const ink = document.createElement("span");
+      ink.className = "ripple-ink";
+      ink.style.width = ink.style.height = `${size}px`;
+      ink.style.left = `${event.clientX - rect.left}px`;
+      ink.style.top = `${event.clientY - rect.top}px`;
+      host.classList.add("ripple-host");
+      host.appendChild(ink);
+      window.setTimeout(() => ink.remove(), 700);
+    };
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() =>
+        document.documentElement.style.setProperty("--sy", String(Math.min(window.scrollY, 600))),
+      );
+    };
+    document.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  return null;
+}
+
+/** Pointer-driven 3D tilt and spotlight for a card. Tilt only for mouse/pen. */
+export function useTilt<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const handlers = {
+    onPointerMove: (event: React.PointerEvent<T>) => {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const px = (event.clientX - rect.left) / rect.width;
+      const py = (event.clientY - rect.top) / rect.height;
+      el.style.setProperty("--mx", `${px * 100}%`);
+      el.style.setProperty("--my", `${py * 100}%`);
+      el.style.setProperty("--spot", "1");
+      if (event.pointerType !== "touch") {
+        el.style.setProperty("--rx", `${(0.5 - py) * 5}deg`);
+        el.style.setProperty("--ry", `${(px - 0.5) * 6}deg`);
+      }
+    },
+    onPointerDown: (event: React.PointerEvent<T>) => handlers.onPointerMove(event),
+    onPointerLeave: () => {
+      const el = ref.current;
+      if (!el) return;
+      el.style.setProperty("--rx", "0deg");
+      el.style.setProperty("--ry", "0deg");
+      el.style.setProperty("--spot", "0");
+    },
+  };
+  return { ref, handlers };
+}
+
+/** Adds `.in` to each `.reveal` child of the returned ref as it scrolls into view. */
+export function useReveal<T extends HTMLElement>(deps: unknown[]) {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -6% 0px", threshold: 0.05 },
+    );
+    root.querySelectorAll(".reveal:not(.in)").forEach((n) => io.observe(n));
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return ref;
+}

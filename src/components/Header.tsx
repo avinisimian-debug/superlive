@@ -50,12 +50,20 @@ export function Header({
       <span className="aurora aurora-a" aria-hidden="true" />
       <span className="aurora aurora-b" aria-hidden="true" />
       <span className="aurora aurora-c" aria-hidden="true" />
+      <div className="radar" style={{ top: "3.2rem", left: "-2.6rem" }} aria-hidden="true">
+        <i className="blip text-emerald-400" style={{ left: "68.0%", top: "28.6%", animationDelay: "0.50s" }} />
+        <i className="blip text-emerald-400" style={{ left: "68.1%", top: "58.5%", animationDelay: "1.44s" }} />
+        <i className="blip text-amber-400" style={{ left: "55.7%", top: "82.5%", animationDelay: "2.12s" }} />
+        <i className="blip text-emerald-400" style={{ left: "30.3%", top: "63.8%", animationDelay: "2.94s" }} />
+        <i className="blip text-rose-400" style={{ left: "20.6%", top: "33.0%", animationDelay: "3.75s" }} />
+        <i className="blip text-emerald-400" style={{ left: "47.2%", top: "34.2%", animationDelay: "4.38s" }} />
+      </div>
 
       <div className="px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)]">
         {/* Brand bar */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <LogoMark className="h-10 w-10 rounded-[0.9rem] shadow-glow" />
+            <LogoMark className="bob h-10 w-10 rounded-[0.9rem] shadow-glow" />
             <div className="leading-none">
               <div className="flex items-center gap-2">
                 <span className="text-[1.35rem] font-black tracking-tight">זרם</span>
@@ -143,7 +151,7 @@ export function Header({
             {SEGMENTS.map((key) => (
               <span
                 key={key}
-                className="h-full rounded-full transition-[flex-grow] duration-700"
+                className="flow h-full rounded-full transition-[flex-grow] duration-700"
                 style={{
                   flexGrow: Math.max(pulse[key], total * 0.02),
                   background: TONE[key].color,
@@ -173,27 +181,29 @@ export function Header({
       {/* Recommendation, floating over the hero's edge */}
       {suggestion ? (
         <div className="relative z-10 -mt-9 px-4">
-          <button
-            type="button"
-            onClick={() => onOpenBranch(suggestion)}
-            className="press flex w-full items-center gap-3 rounded-3xl bg-white p-3 text-right text-ink-900 shadow-lift ring-1 ring-black/5 animate-rise"
-          >
-            <ChainLogo chain={suggestion.branch.chain} size="md" />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1 text-[0.64rem] font-bold text-brand-700">
-                <SparkIcon className="h-3 w-3" />
-                ההמלצה שלנו עכשיו
+          <div className="orbit-border rounded-3xl animate-rise">
+            <button
+              type="button"
+              onClick={() => onOpenBranch(suggestion)}
+              className="press flex w-full items-center gap-3 rounded-3xl bg-white p-3 text-right text-ink-900 shadow-lift"
+            >
+              <ChainLogo chain={suggestion.branch.chain} size="md" />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1 text-[0.64rem] font-bold text-brand-700">
+                  <SparkIcon className="h-3 w-3" />
+                  ההמלצה שלנו עכשיו
+                </span>
+                <span className="block truncate text-[0.92rem] font-extrabold">
+                  {suggestion.branch.name}
+                </span>
+                <span className="block truncate text-[0.7rem] font-medium text-slate-500">
+                  {formatDistance(suggestion.distance)} ·{" "}
+                  {suggestion.live.estimated ? "צפוי פנוי" : "פנוי לפי דיווח"}
+                </span>
               </span>
-              <span className="block truncate text-[0.92rem] font-extrabold">
-                {suggestion.branch.name}
-              </span>
-              <span className="block truncate text-[0.7rem] font-medium text-slate-500">
-                {formatDistance(suggestion.distance)} ·{" "}
-                {suggestion.live.estimated ? "צפוי פנוי" : "פנוי לפי דיווח"}
-              </span>
-            </span>
-            <CrowdMeter congestion={suggestion.live.congestion} live={!suggestion.live.estimated} />
-          </button>
+              <CrowdMeter congestion={suggestion.live.congestion} live={!suggestion.live.estimated} />
+            </button>
+          </div>
         </div>
       ) : null}
     </>
