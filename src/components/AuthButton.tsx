@@ -6,7 +6,8 @@ import { useAuth } from "@/lib/auth";
 import { LoginModal } from "./LoginModal";
 import { UserIcon, LogoutIcon, ShieldIcon } from "./icons";
 
-export function AuthButton() {
+export function AuthButton({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
+  const dark = tone === "dark";
   const { user, logout, loading } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,7 +26,7 @@ export function AuthButton() {
 
   if (loading) {
     return (
-      <span className="inline-flex h-8 w-16 animate-pulse rounded-full bg-slate-100" />
+      <span className={`inline-flex h-9 w-24 animate-pulse rounded-full ${dark ? "bg-white/10" : "bg-slate-100"}`} />
     );
   }
 
@@ -36,7 +37,11 @@ export function AuthButton() {
           type="button"
           data-testid="auth-login-btn"
           onClick={() => setLoginOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-[0.68rem] font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
+          className={`press inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[0.74rem] font-bold ${
+            dark
+              ? "glass-dark text-white hover:bg-white/15"
+              : "bg-ink-900 text-white shadow-sm hover:bg-ink-800"
+          }`}
         >
           <UserIcon className="h-3.5 w-3.5" />
           התחברות
@@ -54,9 +59,11 @@ export function AuthButton() {
         type="button"
         data-testid="auth-profile-btn"
         onClick={() => setMenuOpen((v) => !v)}
-        className=" inline-flex items-center gap-2 rounded-full bg-slate-900 pe-3 ps-1 py-1 text-[0.68rem] font-bold text-white transition active:scale-[0.98]"
+        className={`press inline-flex h-9 items-center gap-2 rounded-full pe-3 ps-1 text-[0.72rem] font-bold text-white ${
+          dark ? "glass-dark" : "bg-ink-900"
+        }`}
       >
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[0.7rem] font-extrabold">
+        <span className="bg-brand-gradient inline-flex h-7 w-7 items-center justify-center rounded-full text-[0.72rem] font-extrabold">
           {initial}
         </span>
         <span dir="ltr" className="max-w-28 truncate">
