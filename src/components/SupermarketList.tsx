@@ -60,11 +60,11 @@ export function SupermarketList({
 
   if (items.length === 0) {
     return (
-      <div className="mx-4 mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-xs">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sky-50 text-sky-600">
+      <div className="mx-4 mt-4 animate-rise rounded-[1.6rem] bg-white p-8 text-center shadow-card ring-1 ring-slate-200/60">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand-50 text-brand-600">
           <SearchIcon className="h-6 w-6" />
         </div>
-        <p className="mt-3 text-sm font-bold text-slate-800">
+        <p className="mt-3 text-base font-extrabold text-ink-900">
           לא נמצאו סניפים מתאימים
         </p>
         <p className="mt-1 text-xs text-slate-500">
@@ -79,7 +79,7 @@ export function SupermarketList({
 
   return (
     <>
-      <ul className="mt-3 space-y-3 px-4">
+      <ul className="stagger mt-3 space-y-3 px-4">
         {shown.map((item) => (
           <li key={item.branch.id}>
             <SupermarketCard
@@ -97,9 +97,9 @@ export function SupermarketList({
       </ul>
 
       {!done ? (
-        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-sky-600">
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-brand-700">
           <span
-            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-sky-500"
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-brand-500"
             aria-hidden="true"
           />
           טוען סניפים נוספים…

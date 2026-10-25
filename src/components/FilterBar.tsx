@@ -1,10 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CHAINS, type Chain } from "@/lib/types";
 import { getChainMeta } from "@/lib/chains";
 import {
   SearchIcon,
-  SlidersIcon,
   CloseIcon,
   NavigationIcon,
   SparkIcon,
@@ -16,6 +16,12 @@ import {
 
 export type ChainFilter = "all" | Chain;
 export type SortMode = "nearest" | "emptiest" | "byCity";
+
+const SORTS: { value: SortMode; label: string; icon: React.ReactNode }[] = [
+  { value: "nearest", label: "קרוב", icon: <NavigationIcon className="h-3.5 w-3.5" /> },
+  { value: "emptiest", label: "פנוי", icon: <SparkIcon className="h-3.5 w-3.5" /> },
+  { value: "byCity", label: "יישוב", icon: <BuildingIcon className="h-3.5 w-3.5" /> },
+];
 
 export function FilterBar({
   search,
@@ -42,56 +48,93 @@ export function FilterBar({
   lowCongestion: boolean;
   onLowCongestion: (value: boolean) => void;
 }) {
+  // The bar gains a hairline and shadow once it is stuck to the top.
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setStuck(window.scrollY > 260);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const sortIndex = SORTS.findIndex((s) => s.value === sort);
+
   return (
-    <div className="border-b border-slate-200/80 bg-white px-4 py-3.5 shadow-xs">
-      {/* Search Input Bar */}
+    <div
+      className={`sticky top-0 z-30 px-4 pb-2.5 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] transition-shadow duration-300 ${
+        stuck ? "glass-light shadow-[0_8px_24px_-16px_rgba(10,21,48,0.35)]" : "bg-canvas"
+      }`}
+    >
+      {/* Search */}
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 right-3.5 my-auto flex items-center text-slate-400">
-          <SearchIcon className="h-5 w-5" />
-        </div>
+        <SearchIcon className="pointer-events-none absolute inset-y-0 right-4 my-auto h-5 w-5 text-slate-400" />
         <input
           type="search"
           inputMode="search"
           value={search}
           onChange={(event) => onSearch(event.target.value)}
-          placeholder="חיפוש סופרמרקט, רשת, עיר או רחוב…"
+          placeholder="סופר, רשת, עיר או רחוב"
           aria-label="חיפוש סופרמרקט"
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pe-11 ps-11 text-sm font-bold text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-100"
+          className="h-12 w-full rounded-2xl border border-slate-200/80 bg-white pe-11 ps-12 text-[0.9rem] font-semibold text-ink-900 shadow-card outline-none transition placeholder:font-medium placeholder:text-slate-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
         />
         {search ? (
           <button
             type="button"
             onClick={() => onSearch("")}
             aria-label="ניקוי חיפוש"
-            className="absolute inset-y-0 left-2.5 my-auto grid h-7 w-7 place-items-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-slate-300"
+            className="absolute inset-y-0 left-2.5 my-auto grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
         ) : null}
       </div>
 
-      {/* Quick Toggles */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* Quick filters + sort */}
+      <div className="mt-2.5 flex items-center gap-2">
         <Toggle
           active={openNow}
           onClick={() => onOpenNow(!openNow)}
-          label="כנראה פתוח עכשיו"
+          label="פתוח עכשיו"
           icon={<ClockIcon className="h-3.5 w-3.5" />}
         />
         <Toggle
           active={lowCongestion}
           onClick={() => onLowCongestion(!lowCongestion)}
-          label="ללא תור (פנוי)"
+          label="בלי תור"
           icon={<UsersIcon className="h-3.5 w-3.5" />}
         />
+
+        <div
+          role="radiogroup"
+          aria-label="מיון"
+          className="relative ms-auto grid grid-cols-3 rounded-full bg-slate-200/70 p-0.5"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0.5 w-1/3 rounded-full bg-white shadow-sm transition-transform duration-300 ease-[var(--ease-spring)]"
+            style={{ right: 2, transform: `translateX(${-sortIndex * 100}%)`, width: "calc((100% - 4px) / 3)" }}
+          />
+          {SORTS.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              role="radio"
+              aria-checked={sort === s.value}
+              aria-pressed={sort === s.value}
+              onClick={() => onSort(s.value)}
+              className={`relative z-10 inline-flex h-8 items-center justify-center gap-1 px-2.5 text-[0.72rem] font-bold transition-colors ${
+                sort === s.value ? "text-ink-900" : "text-slate-500"
+              }`}
+            >
+              {s.icon}
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Chains Strip with Brand Dots */}
-      <div className="mt-3 flex items-center gap-1.5 text-[0.72rem] font-bold text-slate-500">
-        <SlidersIcon className="h-3.5 w-3.5 text-sky-600" />
-        רשתות קניות
-      </div>
-      <div className="edge-fade -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-1 no-scrollbar">
+      {/* Chains */}
+      <div className="-mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 no-scrollbar">
         <Chip
           label="כל הרשתות"
           count={chainCounts["all"] ?? 0}
@@ -113,31 +156,6 @@ export function FilterBar({
             />
           );
         })}
-      </div>
-
-      {/* Sort Buttons Segmented Control */}
-      <div className="mt-3 flex items-center gap-2 pt-2 border-t border-slate-100">
-        <span className="text-[0.7rem] font-bold text-slate-400 shrink-0">מיון:</span>
-        <div className="flex flex-1 gap-1 rounded-xl bg-slate-100 p-1">
-          <SortButton
-            active={sort === "nearest"}
-            onClick={() => onSort("nearest")}
-            icon={<NavigationIcon className="h-3.5 w-3.5" />}
-            label="הכי קרוב"
-          />
-          <SortButton
-            active={sort === "emptiest"}
-            onClick={() => onSort("emptiest")}
-            icon={<SparkIcon className="h-3.5 w-3.5" />}
-            label="הכי פנוי"
-          />
-          <SortButton
-            active={sort === "byCity"}
-            onClick={() => onSort("byCity")}
-            icon={<BuildingIcon className="h-3.5 w-3.5" />}
-            label="לפי יישוב"
-          />
-        </div>
       </div>
     </div>
   );
@@ -161,25 +179,16 @@ function Chip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition active:scale-95 ${
+      className={`press inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.74rem] font-bold ${
         active
-          ? "bg-slate-900 text-white shadow-xs"
-          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60"
+          ? "bg-ink-900 text-white shadow-sm"
+          : "bg-white text-slate-700 ring-1 ring-slate-200/80 hover:bg-slate-50"
       }`}
     >
-      {dotColor && (
-        <span
-          className="h-2 w-2 rounded-full shrink-0"
-          style={{ backgroundColor: dotColor }}
-        />
-      )}
+      {dotColor && <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: dotColor }} />}
       <span>{label}</span>
-      <span
-        className={`rounded-full px-1.5 text-[0.66rem] font-bold tabular-nums ${
-          active ? "bg-white/20 text-white" : "bg-white text-slate-500 shadow-2xs"
-        }`}
-      >
-        {count}
+      <span className={`tabular text-[0.66rem] font-bold ${active ? "text-white/60" : "text-slate-400"}`}>
+        {count.toLocaleString("he-IL")}
       </span>
     </button>
   );
@@ -201,43 +210,13 @@ function Toggle({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-bold transition active:scale-95 ${
+      className={`press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[0.74rem] font-bold ${
         active
-          ? "bg-sky-500 text-white shadow-xs"
-          : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60"
+          ? "bg-brand-gradient text-white shadow-glow"
+          : "bg-white text-slate-700 ring-1 ring-slate-200/80 hover:bg-slate-50"
       }`}
     >
-      <span className="grid h-4 w-4 place-items-center">
-        {active ? <CheckIcon className="h-3.5 w-3.5" /> : icon}
-      </span>
-      {label}
-    </button>
-  );
-}
-
-function SortButton({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={`inline-flex min-h-8 flex-1 items-center justify-center gap-1.5 rounded-lg text-[0.74rem] font-bold transition ${
-        active
-          ? "bg-white text-slate-900 shadow-xs font-black"
-          : "text-slate-500 hover:text-slate-900"
-      }`}
-    >
-      <span>{icon}</span>
+      {active ? <CheckIcon className="h-3.5 w-3.5" /> : icon}
       {label}
     </button>
   );

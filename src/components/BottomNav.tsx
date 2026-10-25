@@ -6,6 +6,12 @@ import { ZapIcon, StarIcon, UserIcon } from "./icons";
 
 export type AppTab = "feed" | "favorites" | "profile";
 
+const TABS: { id: AppTab; label: string }[] = [
+  { id: "feed", label: "סופרים" },
+  { id: "favorites", label: "מועדפים" },
+  { id: "profile", label: "אזור אישי" },
+];
+
 export function BottomNav({
   currentTab,
   onTabChange,
@@ -15,86 +21,58 @@ export function BottomNav({
 }) {
   const { favorites } = useLive();
   const { user } = useAuth();
+  const index = TABS.findIndex((t) => t.id === currentTab);
 
   return (
     <nav
       aria-label="ניווט ראשי"
-      className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/95 backdrop-blur-md shadow-nav"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]"
     >
-      <div className="mx-auto flex max-w-lg items-center justify-around px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2">
-        {/* Tab 1: Feed */}
-        <button
-          type="button"
-          onClick={() => onTabChange("feed")}
-          className={`flex flex-col items-center gap-1 rounded-2xl px-5 py-1.5 transition active:scale-95 ${
-            currentTab === "feed"
-              ? "text-sky-600 font-black"
-              : "text-slate-500 hover:text-slate-900 font-medium"
-          }`}
-        >
-          <div className="relative">
-            <ZapIcon className={`h-6 w-6 ${currentTab === "feed" ? "text-sky-500" : ""}`} />
-            {currentTab === "feed" ? (
-              <span className="absolute -bottom-1 inset-x-0 mx-auto h-1 w-4 rounded-full bg-sky-500" />
-            ) : null}
-          </div>
-          <span className="text-[0.72rem] tracking-tight">מפת סופרים</span>
-        </button>
+      <div className="pointer-events-auto relative grid w-full max-w-[22rem] grid-cols-3 rounded-[1.4rem] bg-ink-900/92 p-1.5 shadow-float ring-1 ring-white/10 backdrop-blur-xl">
+        {/* Sliding active pill */}
+        <span
+          aria-hidden="true"
+          className="bg-brand-gradient absolute inset-y-1.5 rounded-[1.05rem] shadow-glow transition-transform duration-500 ease-[var(--ease-spring)]"
+          style={{
+            right: 6,
+            width: "calc((100% - 12px) / 3)",
+            transform: `translateX(${-index * 100}%)`,
+          }}
+        />
 
-        {/* Tab 2: Favorites */}
-        <button
-          type="button"
-          onClick={() => onTabChange("favorites")}
-          className={`relative flex flex-col items-center gap-1 rounded-2xl px-5 py-1.5 transition active:scale-95 ${
-            currentTab === "favorites"
-              ? "text-sky-600 font-black"
-              : "text-slate-500 hover:text-slate-900 font-medium"
-          }`}
-        >
-          <div className="relative">
-            <StarIcon
-              filled={currentTab === "favorites" || favorites.length > 0}
-              className={`h-6 w-6 ${
-                currentTab === "favorites"
-                  ? "text-sky-500"
-                  : favorites.length > 0
-                    ? "text-amber-400"
-                    : "text-slate-400"
+        {TABS.map((tab) => {
+          const active = tab.id === currentTab;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              aria-current={active ? "page" : undefined}
+              className={`relative z-10 flex h-12 items-center justify-center gap-1.5 rounded-[1.05rem] text-[0.78rem] font-bold transition-colors active:scale-95 ${
+                active ? "text-white" : "text-white/55 hover:text-white/80"
               }`}
-            />
-            {favorites.length > 0 ? (
-              <span className="absolute -top-1.5 -end-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[0.62rem] font-black text-white shadow-xs">
-                {favorites.length}
+            >
+              <span className="relative">
+                {tab.id === "feed" ? (
+                  <ZapIcon className="h-5 w-5" />
+                ) : tab.id === "favorites" ? (
+                  <StarIcon filled={active} className="h-5 w-5" />
+                ) : (
+                  <UserIcon className="h-5 w-5" />
+                )}
+                {tab.id === "favorites" && favorites.length > 0 ? (
+                  <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[0.58rem] font-black text-ink-950">
+                    {favorites.length}
+                  </span>
+                ) : null}
+                {tab.id === "profile" && user ? (
+                  <span className="absolute -top-0.5 -end-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-ink-900" />
+                ) : null}
               </span>
-            ) : null}
-            {currentTab === "favorites" ? (
-              <span className="absolute -bottom-1 inset-x-0 mx-auto h-1 w-4 rounded-full bg-sky-500" />
-            ) : null}
-          </div>
-          <span className="text-[0.72rem] tracking-tight">מועדפים</span>
-        </button>
-
-        {/* Tab 3: Personal Area / Settings */}
-        <button
-          type="button"
-          onClick={() => onTabChange("profile")}
-          className={`relative flex flex-col items-center gap-1 rounded-2xl px-5 py-1.5 transition active:scale-95 ${
-            currentTab === "profile"
-              ? "text-sky-600 font-black"
-              : "text-slate-500 hover:text-slate-900 font-medium"
-          }`}
-        >
-          <div className="relative">
-            <UserIcon className={`h-6 w-6 ${currentTab === "profile" ? "text-sky-500" : ""}`} />
-            {user ? (
-              <span className="absolute top-0 end-0 h-2 w-2 rounded-full bg-sky-500 ring-2 ring-white" />
-            ) : null}
-            {currentTab === "profile" ? (
-              <span className="absolute -bottom-1 inset-x-0 mx-auto h-1 w-4 rounded-full bg-sky-500" />
-            ) : null}
-          </div>
-          <span className="text-[0.72rem] tracking-tight">אזור אישי</span>
-        </button>
+              <span className={active ? "" : "max-[360px]:hidden"}>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

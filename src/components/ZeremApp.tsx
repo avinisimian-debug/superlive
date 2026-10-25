@@ -15,7 +15,6 @@ import { useLive } from "@/lib/store";
 import type { Branch, Congestion, LiveState, Parking } from "@/lib/types";
 import { Header } from "./Header";
 import { FilterBar, type ChainFilter, type SortMode } from "./FilterBar";
-import { StatsSummary } from "./StatsSummary";
 import { SupermarketList, type ListItem } from "./SupermarketList";
 import { ReportModal } from "./ReportModal";
 import { BranchDetailSheet } from "./BranchDetailSheet";
@@ -25,6 +24,7 @@ import { Toast } from "./Toast";
 import { BottomNav, type AppTab } from "./BottomNav";
 import { PersonalArea } from "./PersonalArea";
 import { RadarIcon, StarIcon } from "./icons";
+import { useAuth } from "@/lib/auth";
 
 const CONGESTION_RANK: Record<Congestion, number> = { free: 0, medium: 1, heavy: 2 };
 const PARKING_RANK: Record<Parking, number> = { plenty: 0, partial: 1, none: 2 };
@@ -38,13 +38,14 @@ export function ZeremApp() {
   const { ready, now, location, getLive, submitReport, totalSubmissions, favorites, customBranches, isPro, smartAlerts } =
     useLive();
 
+  const { user } = useAuth();
   const [splashVisible, setSplashVisible] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
 
   useEffect(() => {
     if (ready) {
       setSplashFading(true);
-      const timer = setTimeout(() => setSplashVisible(false), 400);
+      const timer = setTimeout(() => setSplashVisible(false), 500);
       return () => clearTimeout(timer);
     }
   }, [ready]);
@@ -221,25 +222,27 @@ export function ZeremApp() {
     return mapped;
   }, [base, chain, liveById, location, sort, routesMap]);
 
-  const counts = useMemo(() => {
-    let free = 0;
-    let medium = 0;
-    let heavy = 0;
-    for (const item of items) {
-      if (item.live.congestion === "free") free += 1;
-      else if (item.live.congestion === "medium") medium += 1;
-      else heavy += 1;
+  // City-wide crowd pulse for the hero (every branch, before search/chain filters).
+  const pulse = useMemo(() => {
+    const acc: Record<Congestion, number> = { free: 0, medium: 0, heavy: 0 };
+    for (const branch of allBranches) {
+      if (city !== "all" && branch.city !== city) continue;
+      const live = liveById.get(branch.id);
+      if (live) acc[live.congestion] += 1;
     }
-    return { free, medium, heavy };
-  }, [items]);
+    return acc;
+  }, [allBranches, liveById, city]);
 
-  const freeNow = useMemo(() => {
-    let free = 0;
-    for (const live of liveById.values()) {
-      if (live.congestion === "free") free += 1;
+  // Nearest branch that is quiet and open right now.
+  const suggestion = useMemo<ListItem | null>(() => {
+    let best: ListItem | null = null;
+    for (const item of items) {
+      if (item.live.congestion !== "free") continue;
+      if (!isOpenAt(scheduleOf(item.branch), date)) continue;
+      if (!best || item.distance < best.distance) best = item;
     }
-    return free;
-  }, [liveById]);
+    return best;
+  }, [items, date]);
 
   const cityOptions = useMemo<CityOption[]>(
     () =>
@@ -254,15 +257,35 @@ export function ZeremApp() {
   return (
     <>
       {splashVisible && <SplashScreen fading={splashFading} />}
-      <Header
-        totalBranches={NATIONWIDE_COUNT}
-        cityCount={CITIES.length}
-        freeNow={freeNow}
-        city={city}
-        onOpenCity={() => setCityOpen(true)}
-      />
 
-      {currentTab !== "profile" ? (
+      {currentTab === "feed" ? (
+        <Header
+          totalBranches={NATIONWIDE_COUNT}
+          cityCount={CITIES.length}
+          pulse={pulse}
+          city={city}
+          now={now}
+          firstName={user?.name ? user.name.split(" ")[0] : null}
+          suggestion={ready ? suggestion : null}
+          onOpenCity={() => setCityOpen(true)}
+          onOpenBranch={(item) => setDetail(item.branch)}
+        />
+      ) : currentTab === "favorites" ? (
+        <div className="hero px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)]">
+          <span className="aurora aurora-a" aria-hidden="true" />
+          <span className="aurora aurora-b" aria-hidden="true" />
+          <p className="text-sm font-semibold text-white/60">הסופרים שלך</p>
+          <h1 className="mt-1 flex items-center gap-2 text-[1.7rem] font-black tracking-tight">
+            מועדפים
+            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-sm font-bold text-amber-300">
+              {favorites.length}
+            </span>
+          </h1>
+          <p className="mt-1 text-[0.78rem] text-white/55">מצב העומס בסניפים ששמרת, במבט אחד.</p>
+        </div>
+      ) : null}
+
+      {currentTab !== "profile" && !(currentTab === "favorites" && pool.length === 0) ? (
         <FilterBar
           search={search}
           onSearch={setSearch}
@@ -278,43 +301,40 @@ export function ZeremApp() {
         />
       ) : null}
 
-      <main className="pb-28">
+      <main className="pb-32">
         {!ready ? (
           <LoadingState />
         ) : currentTab === "profile" ? (
-          <PersonalArea onGoToFavorites={() => setCurrentTab("favorites")} />
+          <PersonalArea
+            onGoToFavorites={() => setCurrentTab("favorites")}
+            onOpenBranch={setDetail}
+            allBranches={allBranches}
+          />
         ) : currentTab === "favorites" && pool.length === 0 ? (
-          <div className="mx-4 mt-6 rounded-3xl border border-slate-200/80 bg-white p-8 text-center shadow-card">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 shadow-xs">
-              <StarIcon filled className="h-7 w-7" />
+          <div className="mx-4 mt-5 animate-rise rounded-[1.6rem] bg-white p-8 text-center shadow-card ring-1 ring-slate-200/60">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-[1.2rem] bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-[0_10px_30px_-10px_rgba(245,158,11,0.7)]">
+              <StarIcon filled className="h-8 w-8" />
             </div>
-            <h3 className="mt-4 text-base font-black text-slate-900">
-              עדיין אין סניפים במועדפים
-            </h3>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">
-              לחצו על סימון הכוכב ליד כל סופרמרקט כדי לשמור אותו כאן לגישה מהירה בלחיצה אחת.
+            <h3 className="mt-5 text-lg font-black text-ink-900">עוד אין לך סופרים שמורים</h3>
+            <p className="mx-auto mt-1.5 max-w-[16rem] text-[0.8rem] leading-relaxed text-slate-500">
+              סמנו כוכב על הסופרים שאתם הולכים אליהם, ותראו כאן את העומס בכולם במבט אחד.
             </p>
             <button
               type="button"
               onClick={() => setCurrentTab("feed")}
-              className="mt-5 inline-flex items-center justify-center rounded-2xl bg-sky-500 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-sky-600 active:scale-95"
+              className="press bg-brand-gradient mt-6 inline-flex h-11 items-center justify-center rounded-2xl px-6 text-sm font-extrabold text-white shadow-glow"
             >
-              גלה סופרמרקטים קרובים
+              למציאת סופרים קרובים
             </button>
           </div>
         ) : (
           <>
-            <StatsSummary counts={counts} total={items.length} />
-
-            <div className="mt-3 flex items-center justify-between px-4">
-              <p className="text-[0.72rem] font-semibold text-slate-500">
-                {currentTab === "favorites" ? "המועדפים שלך: " : "מציגים "}
-                {items.length} סניפים
+            <div className="mt-1 flex items-center justify-between px-5">
+              <p className="text-[0.74rem] font-bold text-slate-500">
+                <span className="tabular text-ink-900">{items.length.toLocaleString("he-IL")}</span> סניפים
                 {city !== "all" ? ` ב${city}` : ""}
               </p>
-              <p className="text-[0.68rem] font-semibold text-slate-400">
-                {SORT_LABEL[sort]}
-              </p>
+              <p className="text-[0.7rem] font-semibold text-slate-400">{SORT_LABEL[sort]}</p>
             </div>
 
             <SupermarketList
@@ -328,18 +348,18 @@ export function ZeremApp() {
         )}
 
         {currentTab !== "profile" ? (
-          <footer className="mt-8 px-6 text-center text-[0.68rem] leading-relaxed text-slate-400">
-            <p className="flex items-center justify-center gap-1.5 font-semibold text-slate-500">
-              <RadarIcon className="h-3.5 w-3.5 text-sky-600" />
+          <footer className="mt-10 px-6 text-center text-[0.68rem] leading-relaxed text-slate-400">
+            <p className="flex items-center justify-center gap-1.5 font-bold text-slate-500">
+              <RadarIcon className="h-3.5 w-3.5 text-brand-600" />
               זרם · רשת דיווחים קהילתית
             </p>
             <p className="mt-1">
               {totalSubmissions > 0
-                ? `פרסמתם ${totalSubmissions} דיווחים. תודה שאתם עוזרים לכולם!`
-                : "כל דיווח עוזר לעוד ישראלים לתכנן את הקנייה."}
+                ? `שלחתם ${totalSubmissions} דיווחים. תודה שאתם עוזרים לכולם!`
+                : "כל דיווח עוזר לעוד אנשים לתכנן את הקנייה."}
             </p>
-            <p className="mt-1 text-slate-300">
-              {NATIONWIDE_COUNT} סניפים ב-{CITIES.length} ערים, לפי נתוני OpenStreetMap.
+            <p className="mt-1 text-slate-400/80">
+              {NATIONWIDE_COUNT.toLocaleString("he-IL")} סניפים ב-{CITIES.length} יישובים, לפי נתוני OpenStreetMap.
               העומס מבוסס על דיווחי קהילה, ובלי דיווח עדכני מוצגת הערכה לפי שעה ויום.
             </p>
           </footer>
@@ -395,45 +415,49 @@ export function ZeremApp() {
 function SplashScreen({ fading }: { fading: boolean }) {
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#090d16] text-white select-none transition-opacity duration-400 ${
-        fading ? "opacity-0 pointer-events-none" : "opacity-100"
+      className={`hero fixed inset-0 z-[70] flex flex-col items-center justify-center select-none transition-opacity duration-500 ${
+        fading ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       aria-label="מסך פתיחה של זרם"
     >
+      <span className="aurora aurora-a" aria-hidden="true" />
+      <span className="aurora aurora-b" aria-hidden="true" />
       <div className="flex flex-col items-center px-6 text-center">
-        {/* Glowing Ambient Aura & Authentic Logo */}
-        <div className="relative flex items-center justify-center">
-          <div className="absolute h-36 w-36 rounded-full bg-cyan-400/20 blur-2xl animate-pulse" />
-          <img
-            src="/logo.svg"
-            alt="זרם"
-            className="relative h-24 w-24 rounded-3xl object-cover shadow-2xl ring-1 ring-cyan-400/30"
+        <div className="relative" style={{ animation: "splash-logo 0.9s var(--ease-out-expo) both" }}>
+          <div className="absolute inset-0 -z-10 scale-150 rounded-full bg-cyan-400/30 blur-3xl" />
+          <img src="/logo.svg" alt="זרם" className="h-24 w-24 rounded-[1.6rem] shadow-glow" />
+        </div>
+        <h1 className="mt-6 text-4xl font-black tracking-tight">זרם</h1>
+        <p className="mt-1.5 text-sm font-semibold text-cyan-200/80">עומסים וחניה בסופר, בזמן אמת</p>
+        <div className="mt-10 h-1 w-40 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="bg-brand-gradient h-full w-full origin-right"
+            style={{ animation: "splash-bar 1.2s var(--ease-out-expo) both" }}
           />
         </div>
-
-        <div className="mt-6 flex items-center gap-2">
-          <h1 className="text-3xl font-black tracking-tight text-white">זרם</h1>
-          <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 animate-ping" />
-        </div>
-
-        <p className="mt-1 text-xs font-bold text-cyan-400/90 tracking-wider">
-          עומסים וחניה בסופר בלייב
-        </p>
-
-        {/* Smooth modern progress bar */}
-        <div className="mt-8 flex flex-col items-center gap-2.5">
-          <div className="h-1.5 w-44 overflow-hidden rounded-full bg-slate-800">
-            <div className="h-full w-full bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 animate-pulse" />
-          </div>
-          <span className="text-[0.72rem] text-slate-400 font-medium">
-            טוען {NATIONWIDE_COUNT.toLocaleString("en-US")} סניפים ועומסי קהילה...
-          </span>
-        </div>
+        <span className="mt-3 text-[0.72rem] font-medium text-white/45">
+          טוען {NATIONWIDE_COUNT.toLocaleString("he-IL")} סניפים
+        </span>
       </div>
     </div>
   );
 }
 
 function LoadingState() {
-  return <div className="min-h-[50vh]" aria-hidden="true" />;
+  return (
+    <div className="space-y-3 px-4 pt-3" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-[1.6rem] bg-white p-4 shadow-card">
+          <div className="flex gap-3">
+            <div className="skeleton h-12 w-12 rounded-2xl" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="skeleton h-3.5 w-2/3 rounded-full" />
+              <div className="skeleton h-3 w-1/2 rounded-full" />
+            </div>
+          </div>
+          <div className="skeleton mt-4 h-12 rounded-2xl" />
+        </div>
+      ))}
+    </div>
+  );
 }
